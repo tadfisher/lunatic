@@ -1,0 +1,26 @@
+buildscript {
+    repositories {
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = rootProject.ext.sourceCompatibilityVersion
+    targetCompatibility = rootProject.ext.targetCompatibilityVersion
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'propdeps'
+    apply plugin: 'propdeps-maven'
+    apply plugin: 'propdeps-idea'
+    apply plugin: 'propdeps-eclipse'
+
+    dependencies {
+        compile project(':lunatic-support')
+    }
+}

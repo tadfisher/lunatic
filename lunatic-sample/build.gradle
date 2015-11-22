@@ -1,0 +1,35 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.exmple.lunatic"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled true
+        }
+    }
+}
+
+dependencies {
+    compile project(':lunatic')
+    compile project(':lunatic-support:java-util')
+    compile project(':lunatic-support:joda')
+    compile project(':lunatic-support:threeten')
+
+    compile deps.supportDesign
+    compile deps.jodaAndroid
+    compile deps.threetenAndroid
+}

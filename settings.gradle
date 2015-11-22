@@ -1,0 +1,8 @@
+include ':lunatic'
+include ':lunatic-sample'
+include ':lunatic-support'
+include ':lunatic-support:java-util'
+include ':lunatic-support:joda'
+include ':lunatic-support:threeten'
+
+rootProject.name = 'lunatic-parent'
