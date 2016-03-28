@@ -12,7 +12,6 @@ android {
 }
 
 dependencies {
-    compile project(':lunatic-support')
-
     provided deps.supportRecyclerView
+    provided deps.threeten
 }

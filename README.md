@@ -1,15 +1,9 @@
 # Lunatic
 
-A date picker view for Android, with three support modules that wrap actual date libraries and 
-provide an API.
+A calendar-based date picker view for Android.
 
-The date libraries supported:
-
-- [`java.util.Date`](http://developer.android.com/reference/java/util/Date.html) /
-[`java.util.Calendar`](http://developer.android.com/reference/java/util/Calendar.html)
-
-- [Joda Time](http://www.joda.org/joda-time/):
-[Android port](https://github.com/dlew/joda-time-android)
+An implementation of the ThreeTen Backport library is required. It is strongly recommended that you
+use the Android-optimized backport by Jake Wharton.
 
 - [ThreeTen Backport](http://www.threeten.org/threetenbp/):
 [Android port](https://github.com/JakeWharton/ThreeTenABP)

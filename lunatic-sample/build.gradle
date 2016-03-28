@@ -25,11 +25,7 @@ android {
 
 dependencies {
     compile project(':lunatic')
-    compile project(':lunatic-support:java-util')
-    compile project(':lunatic-support:joda')
-    compile project(':lunatic-support:threeten')
 
     compile deps.supportDesign
-    compile deps.jodaAndroid
     compile deps.threetenAndroid
 }

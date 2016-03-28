@@ -12,10 +12,11 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
-
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import org.threeten.bp.DayOfWeek;
+import org.threeten.bp.YearMonth;
 
 /**
  * Created by tad on 11/16/15.
@@ -84,7 +85,7 @@ public class MonthView extends View {
     private SimpleDateFormat headerFormat;
     private String[] weekdayLabels;
     private NumberFormat dayFormat;
-    private Lunatic.SelectionListener listener;
+    private SelectionListener listener;
 
     private String yearMonthLabel;
     private boolean[] enabledDays;
@@ -155,9 +156,9 @@ public class MonthView extends View {
         }
     }
 
-    void setStaticOptions(int firstDayOfWeek, Locale locale, String headerFormat,
-            String[] weekdayLabels, Lunatic.SelectionListener listener) {
-        this.firstDayOfWeek = firstDayOfWeek;
+    void setStaticOptions(DayOfWeek firstDayOfWeek, Locale locale, String headerFormat,
+            String[] weekdayLabels, SelectionListener listener) {
+        this.firstDayOfWeek = firstDayOfWeek.getValue();
         this.headerFormat = new SimpleDateFormat(headerFormat, locale);
         dayFormat = (NumberFormat) this.headerFormat.getNumberFormat().clone();
 
@@ -172,17 +173,17 @@ public class MonthView extends View {
         this.listener = listener;
     }
 
-    void bind(final Lunatic.YearMonth month, final boolean[] enabledDays) {
+    void bind(final YearMonth month, final boolean[] enabledDays) {
         cellCount = enabledDays.length;
 
-        int firstWeekday = month.day(1).weekday();
+        int firstWeekday = month.atDay(1).getDayOfWeek().getValue();
         cellOffset = (firstWeekday < firstDayOfWeek ? (firstWeekday + 7) : firstWeekday)
                 - firstDayOfWeek;
 
         rowCount = (int) Math.ceil((double) (cellCount + cellOffset) / 7d);
         this.enabledDays = enabledDays;
 
-        headerFormat.getCalendar().set(month.year(), month.month() - 1, 1, 0, 0, 0);
+        headerFormat.getCalendar().set(month.getYear(), month.getMonthValue() - 1, 1, 0, 0, 0);
         yearMonthLabel = headerFormat.format(headerFormat.getCalendar().getTime());
 
         if (textAllCaps[MONTH_PAINT]) {

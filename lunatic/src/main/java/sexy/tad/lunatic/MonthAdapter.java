@@ -4,9 +4,10 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-
 import java.util.List;
 import java.util.Locale;
+import org.threeten.bp.DayOfWeek;
+import org.threeten.bp.YearMonth;
 
 /**
  *
@@ -16,22 +17,22 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
     private final String monthViewLayoutName;
 
     private final Interval interval;
-    private final int firstDayOfWeek;
+    private final DayOfWeek firstDayOfWeek;
     private final Locale locale;
     private final String headerFormat;
     private final String[] weekdayLabels;
-    private final Lunatic.DateFilter filter;
-    private final Lunatic.SelectionListener listener;
+    private final DateFilter filter;
+    private final SelectionListener listener;
 
     MonthAdapter(Context context,
             int monthViewResId,
             Interval interval,
-            int firstDayOfWeek,
+            DayOfWeek firstDayOfWeek,
             Locale locale,
             String headerFormat,
             String[] weekdayLabels,
-            Lunatic.DateFilter filter,
-            Lunatic.SelectionListener listener) {
+            DateFilter filter,
+            SelectionListener listener) {
 
         this.monthViewResId = monthViewResId;
         this.interval = interval;
@@ -80,7 +81,7 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
         return interval.months();
     }
 
-    private Lunatic.YearMonth getMonth(int position) {
+    private YearMonth getMonth(int position) {
         return interval.startMonth.plusMonths(position);
     }
 
@@ -92,8 +93,8 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
             mMonthView = view;
         }
 
-        void bindMonth(Lunatic.YearMonth month) {
-            boolean[] enabledDays = new boolean[month.days()];
+        void bindMonth(YearMonth month) {
+            boolean[] enabledDays = new boolean[month.lengthOfMonth()];
             filter.setEnabledDates(month, enabledDays);
             mMonthView.bind(month, enabledDays);
         }

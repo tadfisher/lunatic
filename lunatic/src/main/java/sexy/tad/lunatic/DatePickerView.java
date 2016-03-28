@@ -5,14 +5,15 @@ import android.content.res.TypedArray;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-
 import java.util.Arrays;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.YearMonth;
 
 public class DatePickerView extends RecyclerView {
     private Options option;
     private Interval interval;
-    private Lunatic.DateFilter filterDelegate;
-    private Lunatic.SelectionListener listenerDelegate;
+    private DateFilter filterDelegate;
+    private SelectionListener listenerDelegate;
     private int monthViewResId;
 
     private boolean invalidateAdapter;
@@ -46,7 +47,7 @@ public class DatePickerView extends RecyclerView {
         setItemAnimator(null);
     }
 
-    void setOptions(Options options) {
+    public void setOptions(Options options) {
         if (options == option) {
             return;
         }
@@ -55,7 +56,7 @@ public class DatePickerView extends RecyclerView {
         invalidateAdapter();
     }
 
-    void setFilter(Lunatic.DateFilter filter) {
+    public void setFilter(DateFilter filter) {
         if (filter == filterDelegate) {
             return;
         }
@@ -63,7 +64,7 @@ public class DatePickerView extends RecyclerView {
         invalidateAdapter();
     }
 
-    void setListener(Lunatic.SelectionListener listener) {
+    public void setListener(SelectionListener listener) {
         if (listener == listenerDelegate) {
             return;
         }
@@ -102,9 +103,9 @@ public class DatePickerView extends RecyclerView {
         }
     };
 
-    private final Lunatic.DateFilter filter = new Lunatic.DateFilter() {
+    private final DateFilter filter = new DateFilter() {
         @Override
-        public void setEnabledDates(Lunatic.YearMonth month, boolean[] enabledDays) {
+        public void setEnabledDates(YearMonth month, boolean[] enabledDays) {
             // By default, days are enabled.
             Arrays.fill(enabledDays, true);
 
@@ -115,13 +116,13 @@ public class DatePickerView extends RecyclerView {
 
             // In all cases, disable dates outside of our view interval.
             if (month.equals(interval.startMonth)) {
-                int start = interval.start.day() - 1;
+                int start = interval.start.getDayOfMonth() - 1;
                 for (int i = 0; i < start; i++) {
                     enabledDays[i] = false;
                 }
             }
             if (month.equals(interval.endMonth)) {
-                int end = interval.end.day();
+                int end = interval.end.getDayOfMonth();
                 for (int i = end; i < enabledDays.length; i++) {
                     enabledDays[i] = false;
                 }
@@ -129,9 +130,9 @@ public class DatePickerView extends RecyclerView {
         }
     };
 
-    private final Lunatic.SelectionListener listener = new Lunatic.SelectionListener() {
+    private final SelectionListener listener = new SelectionListener() {
         @Override
-        public void onDateSelected(Lunatic.Date date) {
+        public void onDateSelected(LocalDate date) {
             if (listenerDelegate != null) {
                 listenerDelegate.onDateSelected(date);
             }
