@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <attr name="lunatic_datePickerStyle" format="reference" />
-    <attr name="lunatic_monthViewStyle" format="reference" />
+  <attr format="reference" name="lunatic_datePickerStyle"/>
+  <attr format="reference" name="lunatic_monthViewStyle"/>
 
-    <declare-styleable name="lunatic_DatePickerView">
-        <attr name="lunatic_monthView" format="reference" />
-    </declare-styleable>
+  <declare-styleable name="lunatic_DatePickerView">
+    <attr format="reference" name="lunatic_monthView"/>
+  </declare-styleable>
 
-    <declare-styleable name="lunatic_MonthView">
-        <attr name="lunatic_cellHeight" format="dimension" />
-        <attr name="lunatic_cellWidth" format="dimension" />
-        <attr name="lunatic_drawGrid" format="boolean" />
-        <attr name="lunatic_gridColor" format="color" />
-        <attr name="lunatic_gridStroke" format="dimension" />
-        <attr name="lunatic_textAppearanceDay" format="reference" />
-        <attr name="lunatic_textAppearanceMonth" format="reference" />
-        <attr name="lunatic_textAppearanceWeekday" format="reference" />
-    </declare-styleable>
+  <declare-styleable name="lunatic_MonthView">
+    <attr format="dimension" name="lunatic_cellHeight"/>
+    <attr format="dimension" name="lunatic_cellWidth"/>
+    <attr format="boolean" name="lunatic_drawGrid"/>
+    <attr format="color" name="lunatic_gridColor"/>
+    <attr format="dimension" name="lunatic_gridStroke"/>
+    <attr format="reference" name="lunatic_textAppearanceDay"/>
+    <attr format="reference" name="lunatic_textAppearanceMonth"/>
+    <attr format="reference" name="lunatic_textAppearanceWeekday"/>
+  </declare-styleable>
 </resources>

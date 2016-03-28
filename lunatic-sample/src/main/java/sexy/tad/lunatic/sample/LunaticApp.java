@@ -8,9 +8,8 @@ import com.jakewharton.threetenabp.AndroidThreeTen;
  */
 public class LunaticApp extends Application {
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        AndroidThreeTen.init(this);
-    }
+  @Override public void onCreate() {
+    super.onCreate();
+    AndroidThreeTen.init(this);
+  }
 }

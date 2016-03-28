@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="lunatic_DatePickerView">
-        <item name="lunatic_monthView">@layout/lunatic_month_view</item>
-    </style>
 
-    <style name="lunatic_MonthView">
-        <item name="lunatic_cellHeight">48dp</item>
-        <item name="lunatic_cellWidth">48dp</item>
-        <item name="lunatic_textAppearanceMonth">?android:textAppearanceLarge</item>
-        <item name="lunatic_textAppearanceWeekday">?android:textAppearanceSmall</item>
-        <item name="lunatic_textAppearanceDay">?android:textAppearanceMedium</item>
-    </style>
+  <style name="lunatic_DatePickerView">
+    <item name="lunatic_monthView">@layout/lunatic_month_view</item>
+  </style>
+
+  <style name="lunatic_MonthView">
+    <item name="lunatic_cellHeight">48dp</item>
+    <item name="lunatic_cellWidth">48dp</item>
+    <item name="lunatic_textAppearanceMonth">?android:textAppearanceLarge</item>
+    <item name="lunatic_textAppearanceWeekday">?android:textAppearanceSmall</item>
+    <item name="lunatic_textAppearanceDay">?android:textAppearanceMedium</item>
+  </style>
 </resources>

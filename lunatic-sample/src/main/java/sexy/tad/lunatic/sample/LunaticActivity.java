@@ -9,19 +9,17 @@ import sexy.tad.lunatic.DatePickerView;
 import sexy.tad.lunatic.Options;
 
 public class LunaticActivity extends AppCompatActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+  @Override protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
 
-        Options options = new Options.Builder()
-                .setMin(LocalDate.of(2015, Month.JANUARY, 1))
-                .setMax(LocalDate.of(2099, Month.DECEMBER, 31))
-                .setFirstDayOfWeek(DayOfWeek.SUNDAY)
-                .setWeekdayFormat("ccc")
-                .build();
+    Options options = new Options.Builder().setMin(LocalDate.of(2015, Month.JANUARY, 1))
+        .setMax(LocalDate.of(2099, Month.DECEMBER, 31))
+        .setFirstDayOfWeek(DayOfWeek.SUNDAY)
+        .setWeekdayFormat("ccc")
+        .build();
 
-        DatePickerView datePickerView = (DatePickerView) findViewById(R.id.date_picker);
-        datePickerView.setOptions(options);
-    }
+    DatePickerView datePickerView = (DatePickerView) findViewById(R.id.date_picker);
+    datePickerView.setOptions(options);
+  }
 }
