@@ -10,7 +10,7 @@ import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 
 public class DatePickerView extends RecyclerView {
-  private Options option;
+  private Options options;
   private Interval interval;
   private DateFilter filterDelegate;
   private SelectionListener listenerDelegate;
@@ -45,10 +45,10 @@ public class DatePickerView extends RecyclerView {
   }
 
   public void setOptions(Options options) {
-    if (options == option) {
+    if (options == this.options) {
       return;
     }
-    option = options;
+    this.options = options;
     interval = new Interval(options.min(), options.max());
     invalidateAdapter();
   }
@@ -82,12 +82,12 @@ public class DatePickerView extends RecyclerView {
       if (!invalidateAdapter) {
         return;
       }
-      if (interval == null || option == null) {
+      if (interval == null || options == null) {
         return;
       }
       invalidateAdapter = false;
-      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, option.firstDayOfWeek(),
-          option.locale(), option.headerFormat(), option.weekdayLabels(), filter, listener));
+      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, options.weekFields(),
+          options.buildHeaderFormatter(), options.buildWeekdayNames(), filter, listener));
     }
   };
 

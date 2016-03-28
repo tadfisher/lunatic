@@ -5,9 +5,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import java.util.List;
-import java.util.Locale;
-import org.threeten.bp.DayOfWeek;
 import org.threeten.bp.YearMonth;
+import org.threeten.bp.format.DateTimeFormatter;
+import org.threeten.bp.temporal.WeekFields;
 
 /**
  *
@@ -17,23 +17,21 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
   private final String monthViewLayoutName;
 
   private final Interval interval;
-  private final DayOfWeek firstDayOfWeek;
-  private final Locale locale;
-  private final String headerFormat;
-  private final String[] weekdayLabels;
+  private final WeekFields weekFields;
+  private final DateTimeFormatter headerFormatter;
+  private final String[] weekdayNames;
   private final DateFilter filter;
   private final SelectionListener listener;
 
-  MonthAdapter(Context context, int monthViewResId, Interval interval, DayOfWeek firstDayOfWeek,
-      Locale locale, String headerFormat, String[] weekdayLabels, DateFilter filter,
+  MonthAdapter(Context context, int monthViewResId, Interval interval, WeekFields weekFields,
+      DateTimeFormatter headerFormatter, String[] weekdayNames, DateFilter filter,
       SelectionListener listener) {
 
     this.monthViewResId = monthViewResId;
     this.interval = interval;
-    this.firstDayOfWeek = firstDayOfWeek;
-    this.locale = locale;
-    this.headerFormat = headerFormat;
-    this.weekdayLabels = weekdayLabels;
+    this.weekFields = weekFields;
+    this.headerFormatter = headerFormatter;
+    this.weekdayNames = weekdayNames;
     this.filter = filter;
     this.listener = listener;
 
@@ -49,7 +47,7 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
     }
 
     MonthView monthView = (MonthView) view;
-    monthView.setStaticOptions(firstDayOfWeek, locale, headerFormat, weekdayLabels, listener);
+    monthView.setStaticOptions(weekFields, headerFormatter, weekdayNames, listener);
 
     return new MonthViewHolder((MonthView) view);
   }

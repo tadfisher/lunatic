@@ -12,11 +12,9 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import org.threeten.bp.DayOfWeek;
 import org.threeten.bp.YearMonth;
+import org.threeten.bp.format.DateTimeFormatter;
+import org.threeten.bp.temporal.WeekFields;
 
 /**
  * Created by tad on 11/16/15.
@@ -75,10 +73,9 @@ public class MonthView extends View {
   private int textColorEnabled;
   private int textColorDisabled;
 
-  private int firstDayOfWeek;
-  private SimpleDateFormat headerFormat;
+  private WeekFields weekFields;
+  private DateTimeFormatter headerFormatter;
   private String[] weekdayLabels;
-  private NumberFormat dayFormat;
   private SelectionListener listener;
 
   private String yearMonthLabel;
@@ -145,11 +142,10 @@ public class MonthView extends View {
     }
   }
 
-  void setStaticOptions(DayOfWeek firstDayOfWeek, Locale locale, String headerFormat,
+  void setStaticOptions(WeekFields weekFields, DateTimeFormatter headerFormatter,
       String[] weekdayLabels, SelectionListener listener) {
-    this.firstDayOfWeek = firstDayOfWeek.getValue();
-    this.headerFormat = new SimpleDateFormat(headerFormat, locale);
-    dayFormat = (NumberFormat) this.headerFormat.getNumberFormat().clone();
+    this.weekFields = weekFields;
+    this.headerFormatter = headerFormatter;
 
     this.weekdayLabels = new String[7];
     System.arraycopy(weekdayLabels, 0, this.weekdayLabels, 0, 7);
@@ -164,17 +160,11 @@ public class MonthView extends View {
 
   void bind(final YearMonth month, final boolean[] enabledDays) {
     cellCount = enabledDays.length;
-
-    int firstWeekday = month.atDay(1).getDayOfWeek().getValue();
-    cellOffset =
-        (firstWeekday < firstDayOfWeek ? (firstWeekday + 7) : firstWeekday) - firstDayOfWeek;
-
+    cellOffset = Utils.startOfWeekOffset(weekFields, month.atDay(1).getDayOfWeek());
     rowCount = (int) Math.ceil((double) (cellCount + cellOffset) / 7d);
     this.enabledDays = enabledDays;
 
-    headerFormat.getCalendar().set(month.getYear(), month.getMonthValue() - 1, 1, 0, 0, 0);
-    yearMonthLabel = headerFormat.format(headerFormat.getCalendar().getTime());
-
+    yearMonthLabel = headerFormatter.format(month);
     if (textAllCaps[MONTH_PAINT]) {
       yearMonthLabel = yearMonthLabel.toUpperCase();
     }
@@ -193,10 +183,9 @@ public class MonthView extends View {
       enabledDays[i] = i % 12 != 0;
     }
 
-    firstDayOfWeek = 7;
+    weekFields = WeekFields.SUNDAY_START;
     yearMonthLabel = "November 2015";
-    weekdayLabels = new String[] { "M", "T", "W", "T", "F", "S", "S" };
-    dayFormat = NumberFormat.getInstance();
+    weekdayLabels = new String[] { "S", "M", "T", "W", "T", "F", "S" };
 
     requestLayout();
     invalidate();
@@ -251,8 +240,7 @@ public class MonthView extends View {
 
   protected void drawWeekdayLabels(Canvas canvas, int offsetX, int offsetY) {
     for (int col = 0; col < 7; col++) {
-      canvas.drawText(weekdayLabels[(col + firstDayOfWeek - 1) % 7], offsetX + colCenter(col),
-          offsetY, weekdayPaint);
+      canvas.drawText(weekdayLabels[col], offsetX + colCenter(col), offsetY, weekdayPaint);
     }
   }
 
@@ -276,7 +264,7 @@ public class MonthView extends View {
       dayPaint.setColor(textColorDisabled);
     }
 
-    canvas.drawText(dayFormat.format(day), x, y, dayPaint);
+    canvas.drawText(String.valueOf(day), x, y, dayPaint);
   }
 
   protected void drawGrid(Canvas canvas) {
