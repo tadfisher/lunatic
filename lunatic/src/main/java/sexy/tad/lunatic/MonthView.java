@@ -59,14 +59,16 @@ public class MonthView extends View {
   private final int[] textOffsetY = new int[3];
 
   private final Rect bounds = new Rect();
+  private Grid layoutGrid;
+  private Grid dayGrid;
 
   private int cellCount;
   private int cellOffset;
   private int rowCount;
-  private int offsetX;
 
   private int cellWidth;
   private int cellHeight;
+  private int offsetX;
   private boolean drawGrid;
 
   private int textColorActive;
@@ -124,6 +126,9 @@ public class MonthView extends View {
 
     this.cellWidth = cellWidth;
     this.cellHeight = cellHeight;
+
+    layoutGrid = new Grid(8, 7, cellWidth, cellHeight);
+    dayGrid = new Grid(6, 7, cellWidth, cellHeight);
 
     this.drawGrid = drawGrid;
     gridPaint.setColor(gridStrokeColor);
@@ -191,8 +196,6 @@ public class MonthView extends View {
     invalidate();
   }
 
-  // TODO bind highlights
-
   @Override protected int getSuggestedMinimumWidth() {
     return getPaddingLeft() + getPaddingRight() + cellWidth * 7;
   }
@@ -210,51 +213,82 @@ public class MonthView extends View {
     bounds.right = w - getPaddingRight();
     bounds.bottom = h - getPaddingBottom();
 
-    if (cellWidth == 0) {
-      cellWidth = bounds.width() / 7;
-    }
-
-    if (cellHeight <= 0 && rowCount > 0) {
-      cellHeight = bounds.height() / rowCount;
-    }
-
     // Center view in bounds
     offsetX = (bounds.width() - cellWidth * 7) / 2;
   }
 
   @Override protected void onDraw(Canvas canvas) {
-    if (drawGrid) {
-      drawGrid(canvas);
-    }
+    drawDayGrid(canvas);
     drawHeader(canvas);
-    drawWeekdayLabels(canvas, bounds.left + offsetX,
-        bounds.top + cellHeight + rowCenter(0) + textOffsetY[WEEKDAY_PAINT]);
-    drawDayLabels(canvas, bounds.left + offsetX,
-        bounds.top + cellHeight * 2 + textOffsetY[DAY_PAINT]);
+    drawWeekdayLabels(canvas);
+    drawDayLabels(canvas);
+  }
+
+  protected void drawDayGrid(Canvas canvas) {
+    if (!drawGrid) {
+      return;
+    }
+
+    canvas.save();
+    canvas.translate(offsetX, bounds.top + layoutGrid.bottom(1));
+
+    for (int row = 0; row < rowCount; row++) {
+      int top = dayGrid.top(row);
+      canvas.drawLine(0, top, dayGrid.width(), top, gridPaint);
+    }
+    int bottom = dayGrid.bottom(rowCount - 1);
+    canvas.drawLine(0, bottom, dayGrid.width(), bottom, gridPaint);
+
+    float adjust = gridPaint.getStrokeWidth() / 2;
+    for (int col = 0; col < 8; col++) {
+      int left = dayGrid.left(col);
+      canvas.drawLine(left, -adjust, left, adjust, gridPaint);
+    }
+    int right = dayGrid.right(6);
+    canvas.drawLine(right, -adjust, right, adjust, gridPaint);
+
+    canvas.restore();
   }
 
   protected void drawHeader(Canvas canvas) {
-    canvas.drawText(yearMonthLabel, bounds.centerX(),
-        bounds.top + rowCenter(0) + textOffsetY[MONTH_PAINT], monthPaint);
+    canvas.save();
+    canvas.translate(bounds.centerX(), layoutGrid.centerY(0) + textOffsetY[MONTH_PAINT]);
+    canvas.drawText(yearMonthLabel, 0, 0, monthPaint);
+    canvas.restore();
   }
 
-  protected void drawWeekdayLabels(Canvas canvas, int offsetX, int offsetY) {
+  protected void drawWeekdayLabels(Canvas canvas) {
+    canvas.save();
+    canvas.translate(offsetX, bounds.top + layoutGrid.centerY(1) + textOffsetY[WEEKDAY_PAINT]);
+
     for (int col = 0; col < 7; col++) {
-      canvas.drawText(weekdayLabels[col], offsetX + colCenter(col), offsetY, weekdayPaint);
+      canvas.drawText(
+          weekdayLabels[col],
+          layoutGrid.centerX(col),
+          0,
+          weekdayPaint);
     }
+
+    canvas.restore();
   }
 
-  protected void drawDayLabels(Canvas canvas, int offsetX, int offsetY) {
-    // Draw row-by-row.
-    for (int row = 0; row < rowCount; row++) {
+  protected void drawDayLabels(Canvas canvas) {
+    canvas.save();
+    canvas.translate(offsetX, bounds.top + layoutGrid.bottom(1));
+
+    for (int row = 0; row < dayGrid.rows; row++) {
       for (int col = 0; col < 7; col++) {
         int day = dayAt(row, col);
         if (day < 1 || day > cellCount) {
           continue;
         }
-        drawDayLabel(canvas, day, offsetX + colCenter(col), offsetY + rowCenter(row));
+        drawDayLabel(canvas, day,
+            dayGrid.centerX(col),
+            dayGrid.centerY(row) + textOffsetY[DAY_PAINT]);
       }
     }
+
+    canvas.restore();
   }
 
   protected void drawDayLabel(Canvas canvas, int day, int x, int y) {
@@ -267,19 +301,6 @@ public class MonthView extends View {
     canvas.drawText(String.valueOf(day), x, y, dayPaint);
   }
 
-  protected void drawGrid(Canvas canvas) {
-    for (int row = 0; row < rowCount + 2; row++) {
-      canvas.drawLine(bounds.left + offsetX, bounds.top + cellHeight + rowTop(row),
-          bounds.right - offsetX, bounds.top + cellHeight + rowTop(row), gridPaint);
-    }
-
-    float adjust = gridPaint.getStrokeWidth() / 2;
-    for (int col = 0; col < 8; col++) {
-      canvas.drawLine(bounds.left + colLeft(col) + offsetX, bounds.top + cellHeight - adjust,
-          bounds.left + colLeft(col) + offsetX, bounds.bottom + adjust, gridPaint);
-    }
-  }
-
   /**
    * Return the day number at the specified calendar grid coordinate.
    * <p />
@@ -287,22 +308,6 @@ public class MonthView extends View {
    */
   private int dayAt(int row, int col) {
     return (row * 7) + col - cellOffset + 1;
-  }
-
-  private int colLeft(int col) {
-    return col * cellWidth;
-  }
-
-  private int colCenter(int col) {
-    return colLeft(col) + cellWidth / 2;
-  }
-
-  private int rowTop(int row) {
-    return row * cellHeight;
-  }
-
-  private int rowCenter(int row) {
-    return rowTop(row) + cellHeight / 2;
   }
 
   protected void setPaintTextAppearance(int paintIndex, Paint paint, int textAppearanceResId) {
