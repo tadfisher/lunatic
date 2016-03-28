@@ -1,4 +1,4 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import android.graphics.Rect;
 

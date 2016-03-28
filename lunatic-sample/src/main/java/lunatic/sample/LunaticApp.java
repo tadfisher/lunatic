@@ -1,4 +1,4 @@
-package sexy.tad.lunatic.sample;
+package lunatic.sample;
 
 import android.app.Application;
 import com.jakewharton.threetenabp.AndroidThreeTen;

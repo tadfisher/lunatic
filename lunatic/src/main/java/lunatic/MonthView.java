@@ -1,4 +1,4 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -12,6 +12,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
+import codes.tad.lunatic.R;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;

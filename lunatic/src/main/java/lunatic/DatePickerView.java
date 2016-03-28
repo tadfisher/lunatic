@@ -1,10 +1,11 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import codes.tad.lunatic.R;
 import java.util.Arrays;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;

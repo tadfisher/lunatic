@@ -1,4 +1,4 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import android.os.Parcelable;
 import com.google.auto.value.AutoValue;
@@ -48,7 +48,7 @@ public abstract class Options implements Parcelable {
       throw new NullPointerException("locale == null");
     }
 
-    return new AutoValue_Options.Builder()
+    return new $AutoValue_Options.Builder()
         .locale(locale)
         .headerPattern("MMMM yyyy")
         .weekFields(WeekFields.of(locale))

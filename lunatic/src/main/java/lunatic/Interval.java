@@ -1,4 +1,4 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;

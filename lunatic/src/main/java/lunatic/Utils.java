@@ -1,4 +1,4 @@
-package sexy.tad.lunatic;
+package lunatic;
 
 import org.threeten.bp.DayOfWeek;
 import org.threeten.bp.jdk8.Jdk8Methods;
