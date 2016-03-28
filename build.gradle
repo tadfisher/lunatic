@@ -19,16 +19,16 @@ ext {
   targetSdkVersion = 23
   compileSdkVersion = 23
   buildToolsVersion = '23.0.2'
-  supportLibraryVersion = '23.1.1'
+  supportLibraryVersion = '23.2.1'
   sourceCompatibilityVersion = JavaVersion.VERSION_1_7
   targetCompatibilityVersion = JavaVersion.VERSION_1_7
 }
 
 ext.deps = [
     // Android
-    supportAnnotations: 'com.android.support:annotations:23.2.1',
-    supportDesign: 'com.android.support:design:23.2.1',
-    supportRecyclerView: 'com.android.support:recyclerview-v7:23.2.1',
+    supportAnnotations: "com.android.support:annotations:${ext.supportLibraryVersion}",
+    supportDesign: "com.android.support:design:${ext.supportLibraryVersion}",
+    supportRecyclerView: "com.android.support:recyclerview-v7:${ext.supportLibraryVersion}",
 
     // ThreeTen
     threeten: 'org.threeten:threetenbp:1.3.1',

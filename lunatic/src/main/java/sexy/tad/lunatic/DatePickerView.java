@@ -49,7 +49,7 @@ public class DatePickerView extends RecyclerView {
       return;
     }
     option = options;
-    interval = new Interval(options.min, options.max);
+    interval = new Interval(options.min(), options.max());
     invalidateAdapter();
   }
 
@@ -86,8 +86,8 @@ public class DatePickerView extends RecyclerView {
         return;
       }
       invalidateAdapter = false;
-      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, option.firstDayOfWeek,
-          option.locale, option.headerFormat, option.weekdayLabels, filter, listener));
+      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, option.firstDayOfWeek(),
+          option.locale(), option.headerFormat(), option.weekdayLabels(), filter, listener));
     }
   };
 
