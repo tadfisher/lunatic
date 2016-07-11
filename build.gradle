@@ -3,8 +3,9 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.1.0-alpha3'
+    classpath 'com.android.tools.build:gradle:2.2.0-alpha5'
     classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+    classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
   }
 }
 
@@ -16,10 +17,10 @@ allprojects {
 
 ext {
   minSdkVersion = 16
-  targetSdkVersion = 23
-  compileSdkVersion = 23
-  buildToolsVersion = '23.0.2'
-  supportLibraryVersion = '23.2.1'
+  targetSdkVersion = 24
+  compileSdkVersion = 24
+  buildToolsVersion = '24.0.0'
+  supportLibraryVersion = '24.0.0'
   sourceCompatibilityVersion = JavaVersion.VERSION_1_7
   targetCompatibilityVersion = JavaVersion.VERSION_1_7
 }
@@ -31,10 +32,12 @@ ext.deps = [
     supportRecyclerView: "com.android.support:recyclerview-v7:${ext.supportLibraryVersion}",
 
     // ThreeTen
-    threeten: 'org.threeten:threetenbp:1.3.1',
+    threeten: 'org.threeten:threetenbp:1.3.2',
     threetenAndroid: 'com.jakewharton.threetenabp:threetenabp:1.0.3',
 
     // Helpers
-    autoValue: 'com.google.auto.value:auto-value:1.2-rc1',
-    autoValueParcel: 'com.ryanharter.auto.value:auto-value-parcel:0.2.1'
+    autoValue: 'com.google.auto.value:auto-value:1.3-rc2',
+    autoValueParcel: 'com.ryanharter.auto.value:auto-value-parcel:0.2.3-rc2'
 ]
+
+apply plugin: 'com.github.ben-manes.versions'
