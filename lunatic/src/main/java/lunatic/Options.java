@@ -1,6 +1,5 @@
 package lunatic;
 
-import android.os.Parcelable;
 import com.google.auto.value.AutoValue;
 import java.util.Locale;
 import org.threeten.bp.DayOfWeek;
@@ -14,7 +13,7 @@ import org.threeten.bp.temporal.WeekFields;
  * Options for the DatePickerView.
  */
 @AutoValue
-public abstract class Options implements Parcelable {
+public abstract class Options {
   public abstract LocalDate min();
   public abstract LocalDate max();
   public abstract String headerPattern();
@@ -48,7 +47,7 @@ public abstract class Options implements Parcelable {
       throw new NullPointerException("locale == null");
     }
 
-    return new $AutoValue_Options.Builder()
+    return new AutoValue_Options.Builder()
         .locale(locale)
         .headerPattern("MMMM yyyy")
         .weekFields(WeekFields.of(locale))
