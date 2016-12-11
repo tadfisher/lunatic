@@ -14,7 +14,7 @@ public class LunaticActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    Options options = Options.builder(new Locale("es", "ES"))
+    Options options = Options.builder(Locale.getDefault())
         .min(LocalDate.of(2016, Month.MARCH, 1))
         .max(LocalDate.of(2099, Month.DECEMBER, 31))
         .build();

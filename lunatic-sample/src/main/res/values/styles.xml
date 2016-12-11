@@ -14,5 +14,4 @@
     <item name="lunatic_datePickerStyle">@style/lunatic_DatePickerView</item>
     <item name="lunatic_monthViewStyle">@style/lunatic_MonthView</item>
   </style>
-
 </resources>

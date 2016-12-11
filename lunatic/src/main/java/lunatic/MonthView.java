@@ -1,7 +1,6 @@
 package lunatic;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
@@ -60,15 +59,17 @@ public class MonthView extends View {
   private final int[] textOffsetY = new int[3];
 
   private final Rect bounds = new Rect();
-  private Grid layoutGrid;
   private Grid dayGrid;
 
   private int cellCount;
   private int cellOffset;
   private int rowCount;
 
-  private int cellWidth;
-  private int cellHeight;
+  private int dayWidth;
+  private int dayHeight;
+  private int weekdayHeight;
+  private int monthHeight;
+
   private int offsetX;
   private boolean drawGrid;
 
@@ -85,55 +86,38 @@ public class MonthView extends View {
   private boolean[] enabledDays;
 
   public MonthView(Context context) {
-    super(context);
-    init(context, null, R.attr.lunatic_monthViewStyle, R.style.lunatic_MonthView);
+    this(context, null);
   }
 
   public MonthView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-    init(context, attrs, R.attr.lunatic_monthViewStyle, R.style.lunatic_MonthView);
+    this(context, attrs, R.attr.lunatic_monthViewStyle);
   }
 
   public MonthView(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
-    init(context, attrs, defStyleAttr, R.style.lunatic_MonthView);
-  }
 
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-  public MonthView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-    super(context, attrs, defStyleAttr, defStyleRes);
-    init(context, attrs, defStyleAttr, defStyleRes);
-  }
+    TypedArray a = context.getTheme().obtainStyledAttributes(
+        attrs, R.styleable.lunatic_MonthView, defStyleAttr, R.style.lunatic_MonthView);
 
-  protected void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-    TypedArray a = context.getTheme()
-        .obtainStyledAttributes(attrs, R.styleable.lunatic_MonthView, defStyleAttr, defStyleRes);
+    dayWidth = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayWidth, 0);
+    dayHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayHeight, 0);
+    weekdayHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_weekDayHeight, 0);
+    monthHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_monthHeight, 0);
 
-    int cellHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_cellHeight, 0);
-    int cellWidth = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_cellWidth, 0);
-
-    boolean drawGrid = a.getBoolean(R.styleable.lunatic_MonthView_lunatic_drawGrid, false);
-    int gridStrokeColor = a.getColor(R.styleable.lunatic_MonthView_lunatic_gridColor, 0xffcccccc);
-    float gridStrokeWidth = a.getDimension(R.styleable.lunatic_MonthView_lunatic_gridStroke, 1f);
+    drawGrid = a.getBoolean(R.styleable.lunatic_MonthView_lunatic_drawGrid, false);
+    gridPaint.setColor(a.getColor(R.styleable.lunatic_MonthView_lunatic_gridColor, 0xffcccccc));
+    gridPaint.setStrokeWidth(a.getDimension(R.styleable.lunatic_MonthView_lunatic_gridStroke, 1f));
 
     int textAppearanceDayRes =
-        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_textAppearanceDay, 0);
-    int textAppearanceMonthRes =
-        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_textAppearanceMonth, 0);
+        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_dateTextAppearance, 0);
     int textAppearanceWeekdayRes =
-        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_textAppearanceWeekday, 0);
+        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_weekDayTextAppearance, 0);
+    int textAppearanceMonthRes =
+        a.getResourceId(R.styleable.lunatic_MonthView_lunatic_monthTextAppearance, 0);
 
     a.recycle();
 
-    this.cellWidth = cellWidth;
-    this.cellHeight = cellHeight;
-
-    layoutGrid = new Grid(8, 7, cellWidth, cellHeight);
-    dayGrid = new Grid(6, 7, cellWidth, cellHeight);
-
-    this.drawGrid = drawGrid;
-    gridPaint.setColor(gridStrokeColor);
-    gridPaint.setStrokeWidth(gridStrokeWidth);
+    dayGrid = new Grid(6, 7, dayWidth, dayHeight);
 
     setPaintTextAppearance(DAY_PAINT, dayPaint, textAppearanceDayRes);
     setPaintTextAppearance(MONTH_PAINT, monthPaint, textAppearanceMonthRes);
@@ -146,6 +130,12 @@ public class MonthView extends View {
     if (isInEditMode()) {
       bindFakeMonth();
     }
+  }
+
+  public void setTypeface(Typeface tf) {
+    setPaintTypeface(dayPaint, tf);
+    setPaintTypeface(weekdayPaint, tf);
+    setPaintTypeface(monthPaint, tf);
   }
 
   void setStaticOptions(WeekFields weekFields, DateTimeFormatter headerFormatter,
@@ -198,12 +188,16 @@ public class MonthView extends View {
   }
 
   @Override protected int getSuggestedMinimumWidth() {
-    return getPaddingLeft() + getPaddingRight() + cellWidth * 7;
+    return getPaddingLeft() + getPaddingRight() + dayWidth * 7;
   }
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),
-        cellHeight * (rowCount + 2) + getPaddingTop() + getPaddingBottom());
+        resolveSize(monthHeight
+            + weekdayHeight
+            + dayGrid.bottom(rowCount - 1)
+            + getPaddingTop()
+            + getPaddingBottom(), heightMeasureSpec));
   }
 
   @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -215,14 +209,38 @@ public class MonthView extends View {
     bounds.bottom = h - getPaddingBottom();
 
     // Center view in bounds
-    offsetX = (bounds.width() - cellWidth * 7) / 2;
+    offsetX = (bounds.width() - dayWidth * 7) / 2;
   }
 
   @Override protected void onDraw(Canvas canvas) {
-    drawDayGrid(canvas);
-    drawHeader(canvas);
+    drawMonth(canvas);
     drawWeekdayLabels(canvas);
+    drawDayGrid(canvas);
     drawDayLabels(canvas);
+  }
+
+  protected void drawMonth(Canvas canvas) {
+    canvas.save();
+    canvas.translate(bounds.centerX(),
+        bounds.top + (monthHeight / 2) + textOffsetY[MONTH_PAINT]);
+    canvas.drawText(yearMonthLabel, 0, 0, monthPaint);
+    canvas.restore();
+  }
+
+  protected void drawWeekdayLabels(Canvas canvas) {
+    canvas.save();
+    canvas.translate(offsetX,
+        bounds.top + monthHeight + (weekdayHeight / 2) + textOffsetY[WEEKDAY_PAINT]);
+
+    for (int col = 0; col < 7; col++) {
+      canvas.drawText(
+          weekdayLabels[col],
+          dayGrid.centerX(col),
+          0,
+          weekdayPaint);
+    }
+
+    canvas.restore();
   }
 
   protected void drawDayGrid(Canvas canvas) {
@@ -231,7 +249,7 @@ public class MonthView extends View {
     }
 
     canvas.save();
-    canvas.translate(offsetX, bounds.top + layoutGrid.bottom(1));
+    canvas.translate(offsetX, bounds.top + monthHeight + weekdayHeight);
 
     for (int row = 0; row < rowCount; row++) {
       int top = dayGrid.top(row);
@@ -241,41 +259,21 @@ public class MonthView extends View {
     canvas.drawLine(0, bottom, dayGrid.width(), bottom, gridPaint);
 
     float adjust = gridPaint.getStrokeWidth() / 2;
+    int top = dayGrid.top(0);
+    bottom = dayGrid.bottom(rowCount - 1);
     for (int col = 0; col < 8; col++) {
       int left = dayGrid.left(col);
-      canvas.drawLine(left, -adjust, left, adjust, gridPaint);
+      canvas.drawLine(left - adjust, top - adjust, left, bottom + adjust, gridPaint);
     }
     int right = dayGrid.right(6);
-    canvas.drawLine(right, -adjust, right, adjust, gridPaint);
-
-    canvas.restore();
-  }
-
-  protected void drawHeader(Canvas canvas) {
-    canvas.save();
-    canvas.translate(bounds.centerX(), layoutGrid.centerY(0) + textOffsetY[MONTH_PAINT]);
-    canvas.drawText(yearMonthLabel, 0, 0, monthPaint);
-    canvas.restore();
-  }
-
-  protected void drawWeekdayLabels(Canvas canvas) {
-    canvas.save();
-    canvas.translate(offsetX, bounds.top + layoutGrid.centerY(1) + textOffsetY[WEEKDAY_PAINT]);
-
-    for (int col = 0; col < 7; col++) {
-      canvas.drawText(
-          weekdayLabels[col],
-          layoutGrid.centerX(col),
-          0,
-          weekdayPaint);
-    }
+    canvas.drawLine(right - adjust, top - adjust, right, bottom + adjust, gridPaint);
 
     canvas.restore();
   }
 
   protected void drawDayLabels(Canvas canvas) {
     canvas.save();
-    canvas.translate(offsetX, bounds.top + layoutGrid.bottom(1));
+    canvas.translate(offsetX, bounds.top + monthHeight + weekdayHeight);
 
     for (int row = 0; row < dayGrid.rows; row++) {
       for (int col = 0; col < 7; col++) {
