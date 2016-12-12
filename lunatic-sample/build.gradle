@@ -6,20 +6,11 @@ android {
 
   defaultConfig {
     applicationId "codes.tad.lunatic.sample"
+    jackOptions { enabled true }
     minSdkVersion rootProject.ext.minSdkVersion
     targetSdkVersion rootProject.ext.targetSdkVersion
     versionCode 1
     versionName '1.0.0'
-  }
-
-  packagingOptions {
-    exclude 'META-INF/LICENSE.txt'
-  }
-
-  buildTypes {
-    debug {
-      minifyEnabled true
-    }
   }
 }
 
