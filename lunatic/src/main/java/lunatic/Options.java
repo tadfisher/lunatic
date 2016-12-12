@@ -16,6 +16,7 @@ import org.threeten.bp.temporal.WeekFields;
 public abstract class Options {
   public abstract LocalDate min();
   public abstract LocalDate max();
+  public abstract LocalDate now();
   public abstract String headerPattern();
   public abstract WeekFields weekFields();
   public abstract TextStyle weekdayStyle();
@@ -47,9 +48,14 @@ public abstract class Options {
       throw new NullPointerException("locale == null");
     }
 
+    LocalDate now = LocalDate.now();
+
     return new AutoValue_Options.Builder()
         .locale(locale)
         .headerPattern("MMMM yyyy")
+        .min(now.minusWeeks(1))
+        .max(now.plusYears(1))
+        .now(now)
         .weekFields(WeekFields.of(locale))
         .weekdayStyle(TextStyle.NARROW);
   }
@@ -58,10 +64,12 @@ public abstract class Options {
   public abstract static class Builder {
     public abstract Builder min(LocalDate min);
     public abstract Builder max(LocalDate max);
+    public abstract Builder now(LocalDate now);
     public abstract Builder headerPattern(String headerPattern);
     public abstract Builder weekFields(WeekFields weekFields);
     public abstract Builder weekdayStyle(TextStyle weekdayStyle);
     abstract Builder locale(Locale locale);
     public abstract Options build();
   }
+
 }

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <attr format="reference" name="lunatic_datePickerStyle"/>
-  <attr format="reference" name="lunatic_monthViewStyle"/>
+  <attr name="lunatic_datePickerStyle" format="reference" />
+  <attr name="lunatic_monthViewStyle" format="reference" />
 
   <declare-styleable name="lunatic_DatePickerView">
-    <attr format="reference" name="lunatic_monthView"/>
+    <attr name="lunatic_monthView" format="reference" />
+    <attr name="lunatic_minDate" format="string" />
+    <attr name="lunatic_maxDate" format="string" />
   </declare-styleable>
 
   <declare-styleable name="lunatic_MonthView">
@@ -16,9 +18,8 @@
     <attr name="lunatic_dateTextAppearance" format="reference" />
     <attr name="lunatic_weekDayTextAppearance" format="reference" />
     <attr name="lunatic_monthTextAppearance" format="reference" />
-    <attr name="lunatic_minDate" format="string" />
-    <attr name="lunatic_maxDate" format="string" />
-
+    <attr name="lunatic_daySelectorColor" format="color" />
+    <attr name="lunatic_dayHighlightColor" format="color" />
     <attr name="lunatic_drawGrid" format="boolean" />
     <attr name="lunatic_gridColor" format="color" />
     <attr name="lunatic_gridStroke" format="dimension" />

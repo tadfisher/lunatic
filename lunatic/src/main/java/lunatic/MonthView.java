@@ -9,16 +9,15 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 import codes.tad.lunatic.R;
+import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
 
-/**
- * Created by tad on 11/16/15.
- */
 public class MonthView extends View {
 
   // These must remain in ascending order!
@@ -47,16 +46,32 @@ public class MonthView extends View {
   private static final int MONTH_PAINT = 1;
   private static final int WEEKDAY_PAINT = 2;
 
-  private static final int[] STATE_ACTIVE = new int[] { android.R.attr.state_active };
+  private static final int[] STATE_ACTIVATED = new int[] { android.R.attr.state_activated };
   private static final int[] STATE_ENABLED = new int[] { android.R.attr.state_enabled };
+  private static final int[] STATE_PRESSED = new int[] { android.R.attr.state_pressed };
+  private static final int[] STATE_DISABLED = new int[] { -android.R.attr.state_enabled };
+  private static final int[] STATE_ENABLED_ACTIVATED = new int[] {
+      android.R.attr.state_enabled,
+      android.R.attr.state_activated
+  };
+  private static final int[] STATE_ENABLED_PRESSED = new int[] {
+      android.R.attr.state_enabled,
+      android.R.attr.state_pressed
+  };
 
-  private final Paint dayPaint = new Paint();
-  private final Paint monthPaint = new Paint();
-  private final Paint weekdayPaint = new Paint();
+  private static final int SELECTED_HIGHLIGHT_ALPHA = 0xB0;
+
+  private final TextPaint dayPaint = new TextPaint();
+  private final TextPaint monthPaint = new TextPaint();
+  private final TextPaint weekdayPaint = new TextPaint();
+
+  private final Paint daySelectorPaint = new Paint();
+  private final Paint dayHighlightPaint = new Paint();
+  private final Paint dayHighlightSelectorPaint = new Paint();
   private final Paint gridPaint = new Paint();
 
   private final boolean[] textAllCaps = new boolean[3];
-  private final int[] textOffsetY = new int[3];
+  private final float[] textOffsetY = new float[3];
 
   private final Rect bounds = new Rect();
   private Grid dayGrid;
@@ -65,22 +80,20 @@ public class MonthView extends View {
   private int cellOffset;
   private int rowCount;
 
-  private int dayWidth;
-  private int dayHeight;
   private int weekdayHeight;
   private int monthHeight;
 
   private int offsetX;
   private boolean drawGrid;
 
-  private int textColorActive;
-  private int textColorEnabled;
-  private int textColorDisabled;
+  private ColorStateList dayTextColor;
 
   private WeekFields weekFields;
   private DateTimeFormatter headerFormatter;
   private String[] weekdayLabels;
   private SelectionListener listener;
+
+  private int today;
 
   private String yearMonthLabel;
   private boolean[] enabledDays;
@@ -99,14 +112,36 @@ public class MonthView extends View {
     TypedArray a = context.getTheme().obtainStyledAttributes(
         attrs, R.styleable.lunatic_MonthView, defStyleAttr, R.style.lunatic_MonthView);
 
-    dayWidth = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayWidth, 0);
-    dayHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayHeight, 0);
+    int dayWidth = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayWidth, 0);
+    int dayHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_dayHeight, 0);
     weekdayHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_weekDayHeight, 0);
     monthHeight = a.getDimensionPixelSize(R.styleable.lunatic_MonthView_lunatic_monthHeight, 0);
 
     drawGrid = a.getBoolean(R.styleable.lunatic_MonthView_lunatic_drawGrid, false);
     gridPaint.setColor(a.getColor(R.styleable.lunatic_MonthView_lunatic_gridColor, 0xffcccccc));
     gridPaint.setStrokeWidth(a.getDimension(R.styleable.lunatic_MonthView_lunatic_gridStroke, 1f));
+
+    final ColorStateList daySelectorColor =
+        a.getColorStateList(R.styleable.lunatic_MonthView_lunatic_daySelectorColor);
+    final int activatedColor;
+    if (daySelectorColor == null) {
+      activatedColor = a.getColor(R.styleable.lunatic_MonthView_lunatic_daySelectorColor, 0);
+    } else {
+      activatedColor = daySelectorColor.getColorForState(STATE_ENABLED_ACTIVATED, 0);
+    }
+    daySelectorPaint.setColor(activatedColor);
+    dayHighlightSelectorPaint.setColor(activatedColor);
+    dayHighlightSelectorPaint.setAlpha(SELECTED_HIGHLIGHT_ALPHA);
+
+    final ColorStateList dayHighlightColor =
+        a.getColorStateList(R.styleable.lunatic_MonthView_lunatic_dayHighlightColor);
+    final int pressedColor;
+    if (dayHighlightColor == null) {
+      pressedColor = a.getColor(R.styleable.lunatic_MonthView_lunatic_dayHighlightColor, 0);
+    } else {
+      pressedColor = dayHighlightColor.getColorForState(STATE_ENABLED_PRESSED, 0);
+    }
+    dayHighlightPaint.setColor(pressedColor);
 
     int textAppearanceDayRes =
         a.getResourceId(R.styleable.lunatic_MonthView_lunatic_dateTextAppearance, 0);
@@ -126,12 +161,16 @@ public class MonthView extends View {
     setDefaultPaintFlags(monthPaint);
     setDefaultPaintFlags(weekdayPaint);
     setDefaultPaintFlags(dayPaint);
+    setDefaultPaintFlags(daySelectorPaint);
+    setDefaultPaintFlags(dayHighlightPaint);
+    setDefaultPaintFlags(dayHighlightSelectorPaint);
 
     if (isInEditMode()) {
       bindFakeMonth();
     }
   }
 
+  @SuppressWarnings("unused")
   public void setTypeface(Typeface tf) {
     setPaintTypeface(dayPaint, tf);
     setPaintTypeface(weekdayPaint, tf);
@@ -154,7 +193,7 @@ public class MonthView extends View {
     this.listener = listener;
   }
 
-  void bind(final YearMonth month, final boolean[] enabledDays) {
+  void bind(final YearMonth month, final LocalDate now, final boolean[] enabledDays) {
     cellCount = enabledDays.length;
     cellOffset = Utils.startOfWeekOffset(weekFields, month.atDay(1).getDayOfWeek());
     rowCount = (int) Math.ceil((double) (cellCount + cellOffset) / 7d);
@@ -164,6 +203,10 @@ public class MonthView extends View {
     if (textAllCaps[MONTH_PAINT]) {
       yearMonthLabel = yearMonthLabel.toUpperCase();
     }
+
+    today = YearMonth.from(now).equals(month)
+        ? now.getDayOfMonth()
+        : -1;
 
     requestLayout();
     invalidate();
@@ -182,13 +225,14 @@ public class MonthView extends View {
     weekFields = WeekFields.SUNDAY_START;
     yearMonthLabel = "November 2015";
     weekdayLabels = new String[] { "S", "M", "T", "W", "T", "F", "S" };
+    today = 13;
 
     requestLayout();
     invalidate();
   }
 
   @Override protected int getSuggestedMinimumWidth() {
-    return getPaddingLeft() + getPaddingRight() + dayWidth * 7;
+    return getPaddingLeft() + getPaddingRight() + dayGrid.width();
   }
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -209,7 +253,7 @@ public class MonthView extends View {
     bounds.bottom = h - getPaddingBottom();
 
     // Center view in bounds
-    offsetX = (bounds.width() - dayWidth * 7) / 2;
+    offsetX = (bounds.width() - dayGrid.width()) / 2;
   }
 
   @Override protected void onDraw(Canvas canvas) {
@@ -290,14 +334,26 @@ public class MonthView extends View {
     canvas.restore();
   }
 
-  protected void drawDayLabel(Canvas canvas, int day, int x, int y) {
-    if (enabledDays[day - 1]) {
-      dayPaint.setColor(textColorEnabled);
+  protected void drawDayLabel(Canvas canvas, int dayOfMonth, float x, float y) {
+    int[] stateSet;
+
+    if (isDayEnabled(dayOfMonth)) {
+      // TODO isActivated
+      // TODO isHighlighted
+      stateSet = STATE_ENABLED;
     } else {
-      dayPaint.setColor(textColorDisabled);
+      stateSet = STATE_DISABLED;
     }
 
-    canvas.drawText(String.valueOf(day), x, y, dayPaint);
+    final int textColor;
+    if (today == dayOfMonth) {
+      textColor = daySelectorPaint.getColor();
+    } else {
+      textColor = dayTextColor.getColorForState(stateSet, 0);
+    }
+    dayPaint.setColor(textColor);
+
+    canvas.drawText(String.valueOf(dayOfMonth), x, y, dayPaint);
   }
 
   /**
@@ -309,7 +365,11 @@ public class MonthView extends View {
     return (row * 7) + col - cellOffset + 1;
   }
 
-  protected void setPaintTextAppearance(int paintIndex, Paint paint, int textAppearanceResId) {
+  private boolean isDayEnabled(int dayOfMonth) {
+    return enabledDays[dayOfMonth - 1];
+  }
+
+  protected void setPaintTextAppearance(int paintIndex, TextPaint paint, int textAppearanceResId) {
     if (paint == null || textAppearanceResId <= 0) {
       return;
     }
@@ -366,12 +426,8 @@ public class MonthView extends View {
 
     if (textColor != null) {
       paint.setColor(textColor.getDefaultColor());
-      if (paintIndex == DAY_PAINT && textColor.isStateful()) {
-        // TODO pull ?textColorPrimary, etc
-        textColorActive =
-            textColor.getColorForState(STATE_ACTIVE, android.R.color.holo_blue_bright);
-        textColorEnabled = textColor.getColorForState(STATE_ENABLED, android.R.color.black);
-        textColorDisabled = textColor.getDefaultColor();
+      if (paintIndex == DAY_PAINT) {
+        dayTextColor = textColor;
       }
     }
     textAllCaps[paintIndex] = allCaps;
@@ -384,7 +440,8 @@ public class MonthView extends View {
 
     setPaintTypefaceFromAttrs(paint, fontFamily, typefaceIndex, styleIndex);
 
-    textOffsetY[paintIndex] = -(paint.getFontMetricsInt().ascent / 2);
+    paint.setTextAlign(Paint.Align.CENTER);
+    textOffsetY[paintIndex] = -((paint.ascent() - paint.descent()) / 2);
   }
 
   private void setPaintTypefaceFromAttrs(Paint paint, String familyName, int typefaceIndex,
@@ -446,6 +503,6 @@ public class MonthView extends View {
 
   protected void setDefaultPaintFlags(Paint paint) {
     paint.setAntiAlias(true);
-    paint.setTextAlign(Paint.Align.CENTER);
+    paint.setStyle(Paint.Style.FILL);
   }
 }

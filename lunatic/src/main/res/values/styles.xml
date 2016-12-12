@@ -33,5 +33,7 @@
     <item name="lunatic_dateTextAppearance">@style/lunatic_TextAppearance.Day</item>
     <item name="lunatic_weekDayTextAppearance">@style/lunatic_TextAppearance.DayOfWeek</item>
     <item name="lunatic_monthTextAppearance">@style/lunatic_TextAppearance.Month</item>
+    <item name="lunatic_daySelectorColor">?android:colorControlActivated</item>
+    <item name="lunatic_dayHighlightColor">?android:colorControlHighlight</item>
   </style>
 </resources>

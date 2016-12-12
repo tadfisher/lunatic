@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import java.util.List;
+import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
@@ -17,18 +18,20 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
   private final String monthViewLayoutName;
 
   private final Interval interval;
+  private final LocalDate now;
   private final WeekFields weekFields;
   private final DateTimeFormatter headerFormatter;
   private final String[] weekdayNames;
-  private final DateFilter filter;
+  private final DatePickerView.DateFilterInternal filter;
   private final SelectionListener listener;
 
-  MonthAdapter(Context context, int monthViewResId, Interval interval, WeekFields weekFields,
-      DateTimeFormatter headerFormatter, String[] weekdayNames, DateFilter filter,
-      SelectionListener listener) {
+  MonthAdapter(Context context, int monthViewResId, Interval interval, LocalDate now,
+      WeekFields weekFields, DateTimeFormatter headerFormatter, String[] weekdayNames,
+      DatePickerView.DateFilterInternal filter, SelectionListener listener) {
 
     this.monthViewResId = monthViewResId;
     this.interval = interval;
+    this.now = now;
     this.weekFields = weekFields;
     this.headerFormatter = headerFormatter;
     this.weekdayNames = weekdayNames;
@@ -79,9 +82,8 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
     }
 
     void bindMonth(YearMonth month) {
-      boolean[] enabledDays = new boolean[month.lengthOfMonth()];
-      filter.setEnabledDates(month, enabledDays);
-      mMonthView.bind(month, enabledDays);
+      boolean[] enabledDays = filter.getEnabledDates(month);
+      mMonthView.bind(month, now, enabledDays);
     }
   }
 }

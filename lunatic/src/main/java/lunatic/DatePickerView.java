@@ -13,6 +13,7 @@ import org.threeten.bp.YearMonth;
 public class DatePickerView extends RecyclerView {
   private Options options;
   private Interval interval;
+  private DateFilterInternal filter;
   private DateFilter filterDelegate;
   private SelectionListener listenerDelegate;
   private int monthViewResId;
@@ -20,29 +21,28 @@ public class DatePickerView extends RecyclerView {
   private boolean invalidateAdapter;
 
   public DatePickerView(Context context) {
-    super(context);
-    init(context, null, R.attr.lunatic_datePickerStyle);
+    this(context, null);
   }
 
   public DatePickerView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-    init(context, attrs, R.attr.lunatic_datePickerStyle);
+    this(context, attrs, R.attr.lunatic_datePickerStyle);
   }
 
   public DatePickerView(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
-    init(context, attrs, defStyleAttr);
-  }
 
-  private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-    TypedArray a = context.getTheme()
-        .obtainStyledAttributes(attrs, R.styleable.lunatic_DatePickerView, defStyleAttr,
-            R.style.lunatic_DatePickerView);
-    monthViewResId = a.getResourceId(R.styleable.lunatic_DatePickerView_lunatic_monthView, 0);
+    TypedArray a = context.getTheme().obtainStyledAttributes(
+        attrs, R.styleable.lunatic_DatePickerView, defStyleAttr, R.style.lunatic_DatePickerView);
+
+    monthViewResId = a.getResourceId(R.styleable.lunatic_DatePickerView_lunatic_monthView,
+        R.layout.lunatic_month_view);
+
     a.recycle();
 
     setLayoutManager(new LinearLayoutManager(context));
     setItemAnimator(null);
+
+    filter = new DateFilterInternal();
   }
 
   public void setOptions(Options options) {
@@ -87,19 +87,27 @@ public class DatePickerView extends RecyclerView {
         return;
       }
       invalidateAdapter = false;
-      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, options.weekFields(),
-          options.buildHeaderFormatter(), options.buildWeekdayNames(), filter, listener));
+
+      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
+          options.weekFields(), options.buildHeaderFormatter(), options.buildWeekdayNames(),
+          filter, listener));
     }
   };
 
-  private final DateFilter filter = new DateFilter() {
-    @Override public void setEnabledDates(YearMonth month, boolean[] enabledDays) {
+  class DateFilterInternal {
+    private final boolean[] enabledDays = new boolean[31];
+
+    boolean[] getEnabledDates(YearMonth month) {
       // By default, days are enabled.
       Arrays.fill(enabledDays, true);
 
+      final int length = month.lengthOfMonth();
+
       // Pass through to any client filter.
       if (filterDelegate != null) {
-        filterDelegate.setEnabledDates(month, enabledDays);
+        for (int i = 0; i < length; i++) {
+          enabledDays[i] = filterDelegate.isEnabled(month.atDay(i + 1));
+        }
       }
 
       // In all cases, disable dates outside of our view interval.
@@ -115,8 +123,9 @@ public class DatePickerView extends RecyclerView {
           enabledDays[i] = false;
         }
       }
+      return Arrays.copyOf(enabledDays, length);
     }
-  };
+  }
 
   private final SelectionListener listener = new SelectionListener() {
     @Override public void onDateSelected(LocalDate date) {
