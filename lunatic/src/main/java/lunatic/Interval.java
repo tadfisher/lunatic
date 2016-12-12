@@ -8,12 +8,12 @@ import org.threeten.bp.temporal.ChronoUnit;
  * Interval between two abstract dates.
  */
 class Interval {
-  public final LocalDate start;
-  public final LocalDate end;
-  public final YearMonth startMonth;
-  public final YearMonth endMonth;
+  final LocalDate start;
+  final LocalDate end;
+  final YearMonth startMonth;
+  final YearMonth endMonth;
 
-  public Interval(LocalDate start, LocalDate end) {
+  Interval(LocalDate start, LocalDate end) {
     this.start = start;
     this.end = end;
 
@@ -25,7 +25,7 @@ class Interval {
     return (int) ChronoUnit.DAYS.between(start, end);
   }
 
-  public int months() {
+  int months() {
     return (int) ChronoUnit.MONTHS.between(start, end) + 1;
   }
 

@@ -10,9 +10,6 @@ import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
 
-/**
- *
- */
 class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
   private final int monthViewResId;
   private final String monthViewLayoutName;
@@ -52,11 +49,12 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
     MonthView monthView = (MonthView) view;
     monthView.setStaticOptions(weekFields, headerFormatter, weekdayNames, listener);
 
-    return new MonthViewHolder((MonthView) view);
+    return new MonthViewHolder(monthView);
   }
 
   @Override public void onBindViewHolder(MonthViewHolder holder, int position) {
-    holder.bindMonth(getMonth(position));
+    final YearMonth yearMonth = getMonth(position);
+    holder.bindMonth(yearMonth, now, filter.getEnabledDates(yearMonth));
   }
 
   @Override
@@ -73,17 +71,16 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder> {
     return interval.startMonth.plusMonths(position);
   }
 
-  class MonthViewHolder extends RecyclerView.ViewHolder {
-    private MonthView mMonthView;
+  static class MonthViewHolder extends RecyclerView.ViewHolder {
+    private final MonthView monthView;
 
-    public MonthViewHolder(MonthView view) {
-      super(view);
-      mMonthView = view;
+    MonthViewHolder(final MonthView monthView) {
+      super(monthView);
+      this.monthView = monthView;
     }
 
-    void bindMonth(YearMonth month) {
-      boolean[] enabledDays = filter.getEnabledDates(month);
-      mMonthView.bind(month, now, enabledDays);
+    void bindMonth(final YearMonth month, final LocalDate now, final boolean[] enabledDays) {
+      monthView.bind(month, now, enabledDays);
     }
   }
 }
