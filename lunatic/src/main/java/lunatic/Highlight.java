@@ -1,12 +1,13 @@
 package lunatic;
 
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import org.threeten.bp.LocalDate;
 import java.util.List;
 
 public abstract class Highlight {
 
-  public enum Op { ADD, CHANGE, REMOVE, SHOW }
+  enum Op { ADD, CHANGE, REMOVE, SHOW }
 
   Interval interval;
 
@@ -34,14 +35,15 @@ public abstract class Highlight {
     }
   }
 
-  /**
-   * Provide a Drawable to display for contiguous regions in this highlight's date interval.
-   * <p>
-   * <em>Note:</em> This drawable should be unique per displayed instance. For example, a
-   * highlight whose interval spans one or more month boundaries should return a new Drawable
-   * instance each time this method is called.
-   */
-  protected abstract Drawable bind(List<BoundedRect> regions, Op op);
+  @NonNull protected abstract Drawable createDrawable();
+
+  protected abstract void onAdd(Drawable drawable, List<BoundedRect> regions);
+
+  protected abstract void onShow(Drawable drawable, List<BoundedRect> regions);
+
+  protected abstract void onChange(Drawable drawable, List<BoundedRect> regions);
+
+  protected abstract void onRemove(Drawable drawable, List<BoundedRect> regions);
 
   void setInterval(LocalDate start, LocalDate end) {
     interval = new Interval(start, end);

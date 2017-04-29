@@ -17,7 +17,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import org.threeten.bp.LocalDate;
@@ -25,6 +24,7 @@ import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.List;
 import codes.tad.lunatic.R;
 
 public class MonthView extends View {
@@ -120,6 +120,8 @@ public class MonthView extends View {
   private ArrayList<BoundedRect> highlightedRects;
 
   private ArrayList<Drawable> highlightDrawables;
+
+  private ArrayList<Drawable> removedHighlightDrawables;
 
   public MonthView(Context context) {
     this(context, null);
@@ -278,14 +280,14 @@ public class MonthView extends View {
     if (highlights == null) {
       highlights = new ArrayList<>(1);
     }
-    highlights.add(highlight);
     final int count = highlights.size();
+    highlights.add(highlight);
 
-    final int weekFrom = (count - 1) * 6;
-    final int weekTo = count * 6 - 1;
+    final int rectsFrom = count * 6;
+    final int rectsTo = count * 6 + 6;
 
-    int rectFrom = -1;
-    int rectTo = -1;
+    int invalidatedFrom = -1;
+    int invalidatedTo = -1;
 
     if (highlightedRects == null) {
       highlightedRects = new ArrayList<>(6);
@@ -293,7 +295,7 @@ public class MonthView extends View {
       highlightedRects.ensureCapacity(count * 6);
     }
 
-    for (int i = weekFrom; i <= weekTo; i++) {
+    for (int i = rectsFrom; i < rectsTo; i++) {
       final BoundedRect r;
       if (highlightedRects.size() <= i) {
         r = new BoundedRect();
@@ -303,39 +305,72 @@ public class MonthView extends View {
       }
       dayGrid.rowRect(i % 6, start + cellOffset - 1, end + cellOffset - 1, r);
       if (!r.rect.isEmpty()) {
-        if (rectFrom == -1) {
-          rectFrom = i;
+        if (invalidatedFrom == -1) {
+          invalidatedFrom = i;
         }
-        rectTo = i + 1;
+        invalidatedTo = i + 1;
       }
     }
+
+    final List<BoundedRect> regions = highlightedRects.subList(invalidatedFrom, invalidatedTo);
 
     if (highlightDrawables == null) {
       highlightDrawables = new ArrayList<>();
     }
 
-    Drawable d = highlight.bind(highlightedRects.subList(rectFrom, rectTo),
-        animate ? Highlight.Op.ADD : Highlight.Op.SHOW);
+    Drawable d = highlight.createDrawable();
     d.setCallback(this);
     highlightDrawables.add(d);
+
+    if (animate) {
+      highlight.onAdd(d, regions);
+    } else {
+      highlight.onShow(d, regions);
+    }
   }
 
   void removeHighlight(Highlight highlight) {
-    // TODO defer removal for animation purposes.
+    if (highlights == null) {
+      return;
+    }
+
     final int index = highlights.indexOf(highlight);
+    final Drawable d = highlightDrawables.remove(index);
+
+    int invalidatedFrom = -1;
+    int invalidatedTo = -1;
+    for (int i = index * 6; i < index * 6 + 6; i++) {
+      final BoundedRect r = highlightedRects.get(i);
+      if (!r.rect.isEmpty()) {
+        if (invalidatedFrom == -1) {
+          invalidatedFrom = i;
+        }
+        invalidatedTo = i + 1;
+      }
+    }
+    highlight.onRemove(d, highlightedRects.subList(invalidatedFrom, invalidatedTo));
+
     highlights.remove(index);
     for (int i = 0; i < 6; i++) {
       highlightedRects.remove(index * 6);
     }
-    highlightDrawables.remove(index);
+
+    if (removedHighlightDrawables == null) {
+      removedHighlightDrawables = new ArrayList<>();
+    }
+    removedHighlightDrawables.add(d);
   }
 
   private void clearHighlights() {
-    if (highlights == null) {
-      return;
+    if (highlights != null) {
+      highlights.clear();
     }
-    highlights.clear();
-    highlightDrawables.clear();
+    if (highlightDrawables != null) {
+      highlightDrawables.clear();
+    }
+    if (removedHighlightDrawables != null) {
+      removedHighlightDrawables.clear();
+    }
   }
 
   @Override
@@ -395,7 +430,9 @@ public class MonthView extends View {
 
   @Override
   protected boolean verifyDrawable(@NonNull Drawable who) {
-    return highlightDrawables.contains(who) || super.verifyDrawable(who);
+    return highlightDrawables != null && highlightDrawables.contains(who)
+        || removedHighlightDrawables != null && removedHighlightDrawables.contains(who)
+        || super.verifyDrawable(who);
   }
 
   @Override
@@ -499,15 +536,23 @@ public class MonthView extends View {
   }
 
   private void drawHighlights(Canvas canvas) {
-    if (highlightDrawables == null) {
+    if (highlightDrawables == null && removedHighlightDrawables == null) {
       return;
     }
 
     canvas.save();
     canvas.translate(offsetX, bounds.top + monthHeight + weekdayHeight);
 
-    for (Drawable d : highlightDrawables) {
-      d.draw(canvas);
+    if (highlightDrawables != null) {
+      for (Drawable d : highlightDrawables) {
+        d.draw(canvas);
+      }
+    }
+
+    if (removedHighlightDrawables != null) {
+      for (Drawable d : removedHighlightDrawables) {
+        d.draw(canvas);
+      }
     }
 
     canvas.restore();

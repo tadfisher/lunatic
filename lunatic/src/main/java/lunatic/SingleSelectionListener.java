@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import org.threeten.bp.LocalDate;
 import java.util.List;
 
@@ -40,68 +41,73 @@ public class SingleSelectionListener implements SelectionListener {
 
   private static class SingleHighlight extends Highlight {
 
-    private final ShapeDrawable circle;
+    private final int color;
 
-    private final Rect zero = new Rect();
     private final RectEvaluator rectEvaluator = new RectEvaluator();
 
     SingleHighlight(int color) {
-      circle = new ShapeDrawable(new OvalShape());
-      circle.getPaint().setColor(color);
+      this.color = color;
+    }
+
+    @NonNull @Override
+    protected Drawable createDrawable() {
+      final ShapeDrawable d = new ShapeDrawable(new OvalShape());
+      d.getPaint().setColor(color);
+      return d;
     }
 
     @Override
-    protected Drawable bind(List<BoundedRect> regions, Op op) {
-      if (regions.isEmpty()) {
-        throw new IllegalArgumentException("regions is empty");
-      }
-
-      // We only support a single selection.
-      final BoundedRect region = regions.get(0);
-
-      // Square the bounds.
-      final Rect rect = region.rect;
-      if (rect.width() > rect.height()) {
-        rect.inset((rect.width() - rect.height()) >> 1, 0);
-      } else if (rect.height() > rect.width()) {
-        rect.inset(0, (rect.height() - rect.width()) >> 1);
-      }
-
-      switch (op) {
-        case ADD:
-          expand(circle, region.rect);
-          break;
-        case REMOVE:
-          contract(circle, region.rect);
-          break;
-        case SHOW:
-          circle.setAlpha(255);
-          circle.setBounds(region.rect);
-          break;
-      }
-
-      return circle;
+    protected void onAdd(Drawable drawable, List<BoundedRect> regions) {
+      expand(drawable, bounds(regions));
     }
 
-    private void expand(Drawable drawable, Rect targetBounds) {
-      final int cx = targetBounds.centerX();
-      final int cy = targetBounds.centerY();
-      zero.set(cx, cy, cx, cy);
+    @Override
+    protected void onShow(Drawable drawable, List<BoundedRect> regions) {
+      drawable.setBounds(bounds(regions));
+      drawable.setAlpha(255);
+    }
+
+    @Override
+    protected void onChange(Drawable drawable, List<BoundedRect> regions) {
+      // TODO support change animation?
+    }
+
+    @Override
+    protected void onRemove(Drawable drawable, List<BoundedRect> regions) {
+      contract(drawable, bounds(regions));
+    }
+
+    private Rect bounds(List<BoundedRect> regions) {
+      final Rect bounds = new Rect(regions.get(0).rect);
+      if (bounds.width() > bounds.height()) {
+        bounds.inset((bounds.width() - bounds.height()) >> 1, 0);
+      } else if (bounds.height() > bounds.width()) {
+        bounds.inset(0, (bounds.height() - bounds.width()) >> 1);
+      }
+      return bounds;
+    }
+
+    private Rect zero(Rect bounds) {
+      final int cx = bounds.centerX();
+      final int cy = bounds.centerY();
+      return new Rect(cx, cy, cx, cy);
+    }
+
+    private void expand(Drawable drawable, Rect bounds) {
       final AnimatorSet set = new AnimatorSet();
       set.playTogether(ObjectAnimator.ofInt(drawable, "alpha", 0, 255),
-          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, zero, targetBounds));
+          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, zero(bounds), bounds));
       set.setInterpolator(Utils.linearOutSlowInInterpolator());
       set.setDuration(225);
       set.start();
     }
 
-    private void contract(Drawable drawable, Rect sourceBounds) {
-      final int cx = sourceBounds.centerX();
-      final int cy = sourceBounds.centerY();
-      zero.set(cx, cy, cx, cy);
+    private void contract(Drawable drawable, Rect bounds) {
+      final int cx = bounds.centerX();
+      final int cy = bounds.centerY();
       final AnimatorSet set = new AnimatorSet();
       set.playTogether(ObjectAnimator.ofInt(drawable, "alpha", 255, 0),
-          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, sourceBounds, zero));
+          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, bounds, zero(bounds)));
       set.setInterpolator(Utils.fastOutLinearInInterpolator());
       set.setDuration(195);
       set.start();
