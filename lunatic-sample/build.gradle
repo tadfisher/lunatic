@@ -21,6 +21,7 @@ android {
 dependencies {
   compile project(':lunatic')
 
+  compile deps.appcompat
   compile deps.supportDesign
   compile deps.threetenAndroid
 }

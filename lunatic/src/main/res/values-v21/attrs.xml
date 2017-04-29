@@ -1,30 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-  <attr name="lunatic_datePickerStyle" format="reference" />
-  <attr name="lunatic_monthViewStyle" format="reference" />
-
-  <declare-styleable name="lunatic_DatePickerView">
-    <attr name="lunatic_monthView" format="reference" />
-    <attr name="lunatic_minDate" format="string" />
-    <attr name="lunatic_maxDate" format="string" />
-  </declare-styleable>
-
-  <declare-styleable name="lunatic_MonthView">
-    <attr name="lunatic_dayWidth" format="dimension" />
-    <attr name="lunatic_dayHeight" format="dimension" />
-    <attr name="lunatic_weekDayHeight" format="dimension" />
-    <attr name="lunatic_monthHeight" format="dimension" />
-    <attr name="lunatic_dateTextAppearance" format="reference" />
-    <attr name="lunatic_weekDayTextAppearance" format="reference" />
-    <attr name="lunatic_monthTextAppearance" format="reference" />
-    <attr name="lunatic_daySelectorColor" format="color" />
-    <attr name="lunatic_dayHighlightColor" format="color" />
-    <attr name="lunatic_drawGrid" format="boolean" />
-    <attr name="lunatic_gridColor" format="color" />
-    <attr name="lunatic_gridStroke" format="dimension" />
-  </declare-styleable>
-
   <declare-styleable name="lunatic_TextAppearance">
     <!-- Text color. -->
     <attr name="android:textColor" />
@@ -56,5 +31,11 @@
     <attr name="android:shadowDy" />
     <!-- Blur radius of the text shadow. -->
     <attr name="android:shadowRadius" />
+    <!-- Elegant text height, especially for less compacted complex script text. -->
+    <attr name="android:elegantTextHeight" />
+    <!-- Text letter-spacing. -->
+    <attr name="android:letterSpacing" />
+    <!-- Font feature settings. -->
+    <attr name="android:fontFeatureSettings" />
   </declare-styleable>
 </resources>

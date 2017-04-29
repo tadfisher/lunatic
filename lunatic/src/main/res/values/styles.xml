@@ -4,21 +4,22 @@
   <style name="lunatic_TextAppearance" />
 
   <style name="lunatic_TextAppearance.Day">
-    <item name="android:textSize">12sp</item>
     <item name="android:fontFamily">sans-serif</item>
     <item name="android:textColor">?android:textColorPrimary</item>
+    <item name="android:textSize">12sp</item>
   </style>
 
   <style name="lunatic_TextAppearance.DayOfWeek">
-    <item name="android:textSize">12sp</item>
     <item name="android:fontFamily">sans-serif</item>
     <item name="android:textColor">?android:textColorSecondary</item>
+    <item name="android:textSize">12sp</item>
   </style>
 
   <style name="lunatic_TextAppearance.Month">
-    <item name="android:textSize">14sp</item>
-    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:fontFamily">sans-serif</item>
     <item name="android:textColor">?android:textColorPrimary</item>
+    <item name="android:textSize">14sp</item>
+    <item name="android:textStyle">bold</item>
   </style>
 
   <style name="lunatic_DatePickerView">
@@ -33,7 +34,7 @@
     <item name="lunatic_dateTextAppearance">@style/lunatic_TextAppearance.Day</item>
     <item name="lunatic_weekDayTextAppearance">@style/lunatic_TextAppearance.DayOfWeek</item>
     <item name="lunatic_monthTextAppearance">@style/lunatic_TextAppearance.Month</item>
-    <item name="lunatic_daySelectorColor">?android:colorControlActivated</item>
-    <item name="lunatic_dayHighlightColor">?android:colorControlHighlight</item>
+    <item name="lunatic_daySelectorColor">?android:colorFocusedHighlight</item>
+    <item name="lunatic_dayHighlightColor">?android:colorActivatedHighlight</item>
   </style>
 </resources>

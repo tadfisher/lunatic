@@ -27,4 +27,5 @@ dependencies {
   provided deps.threeten
   annotationProcessor deps.autoValue
   provided deps.autoValueAnnotations
+  testCompile deps.junit
 }

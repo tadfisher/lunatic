@@ -1,6 +1,10 @@
 package lunatic;
 
-import android.annotation.SuppressLint;
+import static android.view.MotionEvent.ACTION_CANCEL;
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
+
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
@@ -8,53 +12,49 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import codes.tad.lunatic.R;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
+import java.util.ArrayList;
+import codes.tad.lunatic.R;
 
 public class MonthView extends View {
 
-  // These must remain in ascending order!
-  @SuppressLint("InlinedApi") private static final int[] TEXT_APPEARANCE_ATTRS = {
-      android.R.attr.textSize, android.R.attr.typeface, android.R.attr.textStyle,
-      android.R.attr.textColor, android.R.attr.textAllCaps, android.R.attr.fontFamily,
-      android.R.attr.elegantTextHeight, android.R.attr.letterSpacing,
-      android.R.attr.fontFeatureSettings
-  };
-
-  private static final int TEXT_SIZE = 0;
-  private static final int TYPEFACE = 1;
-  private static final int TEXT_STYLE = 2;
-  private static final int TEXT_COLOR = 3;
-  private static final int TEXT_ALL_CAPS = 4;
-  private static final int FONT_FAMILY = 5;
-  private static final int ELEGANT_TEXT_HEIGHT = 6;
-  private static final int LETTER_SPACING = 7;
-  private static final int FONT_FEATURE_SETTINGS = 8;
-
   private static final int SANS = 1;
+
   private static final int SERIF = 2;
+
   private static final int MONOSPACE = 3;
 
   private static final int DAY_PAINT = 0;
+
   private static final int MONTH_PAINT = 1;
+
   private static final int WEEKDAY_PAINT = 2;
 
-  private static final int[] STATE_ACTIVATED = new int[] { android.R.attr.state_activated };
-  private static final int[] STATE_ENABLED = new int[] { android.R.attr.state_enabled };
-  private static final int[] STATE_PRESSED = new int[] { android.R.attr.state_pressed };
-  private static final int[] STATE_DISABLED = new int[] { -android.R.attr.state_enabled };
-  private static final int[] STATE_ENABLED_ACTIVATED = new int[] {
+  private static final int[] STATE_ACTIVATED = new int[]{android.R.attr.state_activated};
+
+  private static final int[] STATE_ENABLED = new int[]{android.R.attr.state_enabled};
+
+  private static final int[] STATE_PRESSED = new int[]{android.R.attr.state_pressed};
+
+  private static final int[] STATE_DISABLED = new int[]{-android.R.attr.state_enabled};
+
+  private static final int[] STATE_ENABLED_ACTIVATED = new int[]{
       android.R.attr.state_enabled,
       android.R.attr.state_activated
   };
-  private static final int[] STATE_ENABLED_PRESSED = new int[] {
+
+  private static final int[] STATE_ENABLED_PRESSED = new int[]{
       android.R.attr.state_enabled,
       android.R.attr.state_pressed
   };
@@ -62,41 +62,64 @@ public class MonthView extends View {
   private static final int SELECTED_HIGHLIGHT_ALPHA = 0xB0;
 
   private final TextPaint dayPaint = new TextPaint();
+
   private final TextPaint monthPaint = new TextPaint();
+
   private final TextPaint weekdayPaint = new TextPaint();
 
   private final Paint daySelectorPaint = new Paint();
+
   private final Paint dayHighlightPaint = new Paint();
+
   private final Paint dayHighlightSelectorPaint = new Paint();
+
   private final Paint gridPaint = new Paint();
 
   private final boolean[] textAllCaps = new boolean[3];
+
   private final float[] textOffsetY = new float[3];
 
   private final Rect bounds = new Rect();
+
   private Grid dayGrid;
 
   private int cellCount;
+
   private int cellOffset;
+
   private int rowCount;
 
   private int weekdayHeight;
+
   private int monthHeight;
 
   private int offsetX;
+
   private boolean drawGrid;
 
   private ColorStateList dayTextColor;
 
   private WeekFields weekFields;
+
   private DateTimeFormatter headerFormatter;
+
   private String[] weekdayLabels;
+
   private SelectionListener listener;
+
+  private YearMonth month;
 
   private int today;
 
   private String yearMonthLabel;
+
   private boolean[] enabledDays;
+
+  private ArrayList<Highlight> highlights;
+
+  private ArrayList<BoundedRect> highlightedRects;
+
+  private ArrayList<Drawable> highlightDrawables;
 
   public MonthView(Context context) {
     this(context, null);
@@ -165,6 +188,8 @@ public class MonthView extends View {
     setDefaultPaintFlags(dayHighlightPaint);
     setDefaultPaintFlags(dayHighlightSelectorPaint);
 
+    yearMonthLabel = "";
+
     if (isInEditMode()) {
       bindFakeMonth();
     }
@@ -193,7 +218,10 @@ public class MonthView extends View {
     this.listener = listener;
   }
 
-  void bind(final YearMonth month, final LocalDate now, final boolean[] enabledDays) {
+  void bind(final YearMonth month, final LocalDate now, final boolean[] enabledDays,
+      final Highlight[] highlights) {
+    this.month = month;
+
     cellCount = enabledDays.length;
     cellOffset = Utils.startOfWeekOffset(weekFields, month.atDay(1).getDayOfWeek());
     rowCount = (int) Math.ceil((double) (cellCount + cellOffset) / 7d);
@@ -207,6 +235,11 @@ public class MonthView extends View {
     today = YearMonth.from(now).equals(month)
         ? now.getDayOfMonth()
         : -1;
+
+    clearHighlights();
+    for (Highlight h : highlights) {
+      addHighlight(h, false);
+    }
 
     requestLayout();
     invalidate();
@@ -224,18 +257,121 @@ public class MonthView extends View {
 
     weekFields = WeekFields.SUNDAY_START;
     yearMonthLabel = "November 2015";
-    weekdayLabels = new String[] { "S", "M", "T", "W", "T", "F", "S" };
+    weekdayLabels = new String[]{"S", "M", "T", "W", "T", "F", "S"};
     today = 13;
 
     requestLayout();
     invalidate();
   }
 
-  @Override protected int getSuggestedMinimumWidth() {
+  void addHighlight(Highlight highlight) {
+    addHighlight(highlight, true);
+  }
+
+  private void addHighlight(Highlight highlight, boolean animate) {
+    final boolean openStart = highlight.interval.startMonth.isBefore(month);
+    final boolean openEnd = highlight.interval.endMonth.isAfter(month);
+
+    final int start = openStart ? 1 : highlight.interval.start.getDayOfMonth();
+    final int end = openEnd ? cellCount : highlight.interval.end.getDayOfMonth();
+
+    if (highlights == null) {
+      highlights = new ArrayList<>(1);
+    }
+    highlights.add(highlight);
+    final int count = highlights.size();
+
+    final int weekFrom = (count - 1) * 6;
+    final int weekTo = count * 6 - 1;
+
+    int rectFrom = -1;
+    int rectTo = -1;
+
+    if (highlightedRects == null) {
+      highlightedRects = new ArrayList<>(6);
+    } else {
+      highlightedRects.ensureCapacity(count * 6);
+    }
+
+    for (int i = weekFrom; i <= weekTo; i++) {
+      final BoundedRect r;
+      if (highlightedRects.size() <= i) {
+        r = new BoundedRect();
+        highlightedRects.add(r);
+      } else {
+        r = highlightedRects.get(i);
+      }
+      dayGrid.rowRect(i % 6, start + cellOffset - 1, end + cellOffset - 1, r);
+      if (!r.rect.isEmpty()) {
+        if (rectFrom == -1) {
+          rectFrom = i;
+        }
+        rectTo = i + 1;
+      }
+    }
+
+    if (highlightDrawables == null) {
+      highlightDrawables = new ArrayList<>();
+    }
+
+    Drawable d = highlight.bind(highlightedRects.subList(rectFrom, rectTo),
+        animate ? Highlight.Op.ADD : Highlight.Op.SHOW);
+    d.setCallback(this);
+    highlightDrawables.add(d);
+  }
+
+  void removeHighlight(Highlight highlight) {
+    // TODO defer removal for animation purposes.
+    final int index = highlights.indexOf(highlight);
+    highlights.remove(index);
+    for (int i = 0; i < 6; i++) {
+      highlightedRects.remove(index * 6);
+    }
+    highlightDrawables.remove(index);
+  }
+
+  private void clearHighlights() {
+    if (highlights == null) {
+      return;
+    }
+    highlights.clear();
+    highlightDrawables.clear();
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    final int x = (int) (event.getX() + 0.5f);
+    final int y = (int) (event.getY() + 0.5f);
+
+    final int action = event.getAction();
+    switch (action) {
+      case ACTION_DOWN:
+      case ACTION_MOVE:
+        final int touchedItem = dayAtPixel(x, y);
+        // TODO draw item highlight
+        if (action == ACTION_DOWN && touchedItem < 0) {
+          return false;
+        }
+        break;
+      case ACTION_UP:
+        final int day = dayAtPixel(x, y);
+        if (day > 0 && isDayEnabled(day)) {
+          listener.onDateClicked(month.atDay(day));
+        }
+        break;
+      case ACTION_CANCEL:
+        break;
+    }
+    return true;
+  }
+
+  @Override
+  protected int getSuggestedMinimumWidth() {
     return getPaddingLeft() + getPaddingRight() + dayGrid.width();
   }
 
-  @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+  @Override
+  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),
         resolveSize(monthHeight
             + weekdayHeight
@@ -244,7 +380,8 @@ public class MonthView extends View {
             + getPaddingBottom(), heightMeasureSpec));
   }
 
-  @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+  @Override
+  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
 
     bounds.left = getPaddingLeft();
@@ -256,11 +393,18 @@ public class MonthView extends View {
     offsetX = (bounds.width() - dayGrid.width()) / 2;
   }
 
-  @Override protected void onDraw(Canvas canvas) {
+  @Override
+  protected boolean verifyDrawable(@NonNull Drawable who) {
+    return highlightDrawables.contains(who) || super.verifyDrawable(who);
+  }
+
+  @Override
+  protected void onDraw(Canvas canvas) {
     drawMonth(canvas);
     drawWeekdayLabels(canvas);
     drawDayGrid(canvas);
     drawDayLabels(canvas);
+    drawHighlights(canvas);
   }
 
   protected void drawMonth(Canvas canvas) {
@@ -338,8 +482,6 @@ public class MonthView extends View {
     int[] stateSet;
 
     if (isDayEnabled(dayOfMonth)) {
-      // TODO isActivated
-      // TODO isHighlighted
       stateSet = STATE_ENABLED;
     } else {
       stateSet = STATE_DISABLED;
@@ -356,6 +498,21 @@ public class MonthView extends View {
     canvas.drawText(String.valueOf(dayOfMonth), x, y, dayPaint);
   }
 
+  private void drawHighlights(Canvas canvas) {
+    if (highlightDrawables == null) {
+      return;
+    }
+
+    canvas.save();
+    canvas.translate(offsetX, bounds.top + monthHeight + weekdayHeight);
+
+    for (Drawable d : highlightDrawables) {
+      d.draw(canvas);
+    }
+
+    canvas.restore();
+  }
+
   /**
    * Return the day number at the specified calendar grid coordinate.
    * <p />
@@ -363,6 +520,15 @@ public class MonthView extends View {
    */
   private int dayAt(int row, int col) {
     return (row * 7) + col - cellOffset + 1;
+  }
+
+  private int dayAtPixel(int x, int y) {
+    int day = dayGrid.offsetAtPixel(x - offsetX,
+        y - bounds.top - monthHeight - weekdayHeight) - cellOffset + 1;
+    if (day < 1 || day > cellCount) {
+      return -1;
+    }
+    return day;
   }
 
   private boolean isDayEnabled(int dayOfMonth) {
@@ -374,12 +540,12 @@ public class MonthView extends View {
       return;
     }
 
-    TypedArray a =
-        getContext().getTheme().obtainStyledAttributes(textAppearanceResId, TEXT_APPEARANCE_ATTRS);
+    TypedArray a = getContext().getTheme().obtainStyledAttributes(
+        textAppearanceResId, R.styleable.lunatic_TextAppearance);
 
     int textSize = 15;
     int typefaceIndex = -1;
-    int styleIndex = -1;
+    int styleIndex = 0;
     ColorStateList textColor = null;
     boolean allCaps = false;
     String fontFamily = null;
@@ -389,34 +555,26 @@ public class MonthView extends View {
 
     for (int i = 0; i < a.getIndexCount(); i++) {
       int attr = a.getIndex(i);
-      switch (attr) {
-        case TEXT_SIZE:
-          textSize = a.getDimensionPixelSize(attr, textSize);
-          break;
-        case TYPEFACE:
-          typefaceIndex = a.getInt(attr, typefaceIndex);
-          break;
-        case TEXT_STYLE:
-          styleIndex = a.getInt(attr, styleIndex);
-          break;
-        case TEXT_COLOR:
-          textColor = a.getColorStateList(attr);
-          break;
-        case TEXT_ALL_CAPS:
-          allCaps = a.getBoolean(attr, allCaps);
-          break;
-        case FONT_FAMILY:
-          fontFamily = a.getString(attr);
-          break;
-        case ELEGANT_TEXT_HEIGHT:
+      if (attr == R.styleable.lunatic_TextAppearance_android_textSize) {
+        textSize = a.getDimensionPixelSize(attr, textSize);
+      } else if (attr == R.styleable.lunatic_TextAppearance_android_typeface) {
+        typefaceIndex = a.getInt(attr, typefaceIndex);
+      } else if (attr == R.styleable.lunatic_TextAppearance_android_textStyle) {
+        styleIndex = a.getInt(attr, styleIndex);
+      } else if (attr == R.styleable.lunatic_TextAppearance_android_textColor) {
+        textColor = a.getColorStateList(attr);
+      } else if (attr == R.styleable.lunatic_TextAppearance_android_textAllCaps) {
+        allCaps = a.getBoolean(attr, allCaps);
+      } else if (attr == R.styleable.lunatic_TextAppearance_android_fontFamily) {
+        fontFamily = a.getString(attr);
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (attr == R.styleable.lunatic_TextAppearance_android_elegantTextHeight) {
           elegant = a.getBoolean(attr, elegant);
-          break;
-        case LETTER_SPACING:
+        } else if (attr == R.styleable.lunatic_TextAppearance_android_letterSpacing) {
           letterSpacing = a.getFloat(attr, letterSpacing);
-          break;
-        case FONT_FEATURE_SETTINGS:
+        } else if (attr == R.styleable.lunatic_TextAppearance_android_fontFeatureSettings) {
           fontFeatureSettings = a.getString(attr);
-          break;
+        }
       }
     }
 
@@ -441,7 +599,7 @@ public class MonthView extends View {
     setPaintTypefaceFromAttrs(paint, fontFamily, typefaceIndex, styleIndex);
 
     paint.setTextAlign(Paint.Align.CENTER);
-    textOffsetY[paintIndex] = -((paint.ascent() - paint.descent()) / 2);
+    textOffsetY[paintIndex] = -(paint.ascent() + paint.descent()) / 2f;
   }
 
   private void setPaintTypefaceFromAttrs(Paint paint, String familyName, int typefaceIndex,
@@ -458,7 +616,6 @@ public class MonthView extends View {
       case SANS:
         tf = Typeface.SANS_SERIF;
         break;
-
       case SERIF:
         tf = Typeface.SERIF;
         break;

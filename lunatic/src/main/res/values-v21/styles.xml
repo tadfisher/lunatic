@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <style name="lunatic_TextAppearance.Month">
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textColor">?android:textColorPrimary</item>
+    <item name="android:textSize">14sp</item>
+  </style>
+
+  <style name="lunatic_MonthView">
+    <item name="lunatic_dayHeight">40dp</item>
+    <item name="lunatic_dayWidth">44dp</item>
+    <item name="lunatic_weekDayHeight">36dp</item>
+    <item name="lunatic_monthHeight">56dp</item>
+    <item name="lunatic_dateTextAppearance">@style/lunatic_TextAppearance.Day</item>
+    <item name="lunatic_weekDayTextAppearance">@style/lunatic_TextAppearance.DayOfWeek</item>
+    <item name="lunatic_monthTextAppearance">@style/lunatic_TextAppearance.Month</item>
+    <item name="lunatic_daySelectorColor">?android:colorControlActivated</item>
+    <item name="lunatic_dayHighlightColor">?android:colorControlHighlight</item>
+  </style>
+</resources>

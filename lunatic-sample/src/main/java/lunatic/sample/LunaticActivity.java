@@ -1,22 +1,29 @@
 package lunatic.sample;
 
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import codes.tad.lunatic.sample.R;
+import org.threeten.bp.DayOfWeek;
 import java.util.Locale;
+import codes.tad.lunatic.sample.R;
 import lunatic.DatePickerView;
 import lunatic.Options;
-import org.threeten.bp.DayOfWeek;
+import lunatic.SingleSelectionListener;
 
 public class LunaticActivity extends AppCompatActivity {
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    Options options = Options.builder(Locale.getDefault()).build();
-
     DatePickerView datePickerView = (DatePickerView) findViewById(R.id.date_picker);
+
+    Options options = Options.builder(Locale.getDefault()).build();
     datePickerView.setOptions(options);
+
+    SingleSelectionListener listener = new SingleSelectionListener(datePickerView,
+        ContextCompat.getColor(this, R.color.colorAccent));
+    datePickerView.setListener(listener);
+
     datePickerView.setFilter(date -> {
       switch (DayOfWeek.from(date)) {
         case SATURDAY:

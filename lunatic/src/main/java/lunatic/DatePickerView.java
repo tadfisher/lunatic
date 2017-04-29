@@ -2,23 +2,25 @@ package lunatic;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import codes.tad.lunatic.R;
-import java.util.Arrays;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
+import java.util.Arrays;
+import codes.tad.lunatic.R;
 
 public class DatePickerView extends RecyclerView {
-  private Options options;
-  private Interval interval;
-  private DateFilterInternal filter;
-  private DateFilter filterDelegate;
-  private SelectionListener listenerDelegate;
-  private int monthViewResId;
-
-  private boolean invalidateAdapter;
+  Options options;
+  Interval interval;
+  DateFilter filterDelegate;
+  SelectionListener listenerDelegate;
+  int monthViewResId;
+  MonthAdapter adapter;
+  DateFilterInternal filter;
+  boolean invalidateAdapter;
+  SparseIntervalTree<Highlight> highlights;
 
   public DatePickerView(Context context) {
     this(context, null);
@@ -43,10 +45,11 @@ public class DatePickerView extends RecyclerView {
     setItemAnimator(null);
 
     filter = new DateFilterInternal();
+    highlights = SparseIntervalTree.create(Highlight.class);
   }
 
-  public void setOptions(Options options) {
-    if (options == this.options) {
+  public void setOptions(@NonNull Options options) {
+    if (options.equals(this.options)) {
       return;
     }
     this.options = options;
@@ -70,6 +73,31 @@ public class DatePickerView extends RecyclerView {
     invalidateAdapter();
   }
 
+  public void setHighlight(Highlight highlight, LocalDate date) {
+    setHighlight(highlight, date, date);
+  }
+
+  public void setHighlight(Highlight highlight, LocalDate start, LocalDate end) {
+    if (!interval.contains(start) || !interval.contains(end)) {
+      throw new IllegalArgumentException("highlight is outside of date range " + interval);
+    }
+
+    if (start.isAfter(end)) {
+      throw new IllegalArgumentException("invalid date interval: " + new Interval(start, end));
+    }
+
+    highlight.setInterval(start, end);
+    highlights.set(highlight, start.toEpochDay(), end.toEpochDay());
+  }
+
+  public void removeHighlight(Highlight highlight) {
+    highlights.remove(highlight);
+  }
+
+  public void clearHighlights() {
+    highlights.clear();
+  }
+
   private void invalidateAdapter() {
     if (invalidateAdapter) {
       return;
@@ -88,9 +116,15 @@ public class DatePickerView extends RecyclerView {
       }
       invalidateAdapter = false;
 
-      setAdapter(new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
+      if (adapter != null) {
+        highlights.removeListener(adapter);
+      }
+
+      adapter = new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
           options.weekFields(), options.buildHeaderFormatter(), options.buildWeekdayNames(),
-          filter, listener));
+          filter, listener, highlights);
+      setAdapter(adapter);
+      highlights.addListener(adapter);
     }
   };
 
@@ -127,10 +161,10 @@ public class DatePickerView extends RecyclerView {
     }
   }
 
-  private final SelectionListener listener = new SelectionListener() {
-    @Override public void onDateSelected(LocalDate date) {
+  final SelectionListener listener = new SelectionListener() {
+    @Override public void onDateClicked(LocalDate date) {
       if (listenerDelegate != null) {
-        listenerDelegate.onDateSelected(date);
+        listenerDelegate.onDateClicked(date);
       }
     }
   };
