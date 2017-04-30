@@ -8,14 +8,15 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
+import java.util.ArrayList;
 import java.util.Arrays;
 import codes.tad.lunatic.R;
 
-public class DatePickerView extends RecyclerView {
+public class DatePickerView extends RecyclerView implements SelectionListener {
   Options options;
   Interval interval;
-  DateFilter filterDelegate;
-  SelectionListener listenerDelegate;
+  ArrayList<DateFilter> filters;
+  ArrayList<SelectionListener> listeners;
   int monthViewResId;
   MonthAdapter adapter;
   DateFilterInternal filter;
@@ -57,20 +58,63 @@ public class DatePickerView extends RecyclerView {
     invalidateAdapter();
   }
 
-  public void setFilter(DateFilter filter) {
-    if (filter == filterDelegate) {
+  public boolean addFilter(DateFilter filter) {
+    if (filters != null && filters.contains(filter)) {
+      return false;
+    }
+    if (filters == null) {
+      filters = new ArrayList<>();
+    }
+    filters.add(filter);
+    invalidateAdapter();
+    return true;
+  }
+
+  public boolean removeFilter(DateFilter filter) {
+    if (filters == null) {
+      return false;
+    }
+    boolean removed = filters.remove(filter);
+    if (removed) {
+      invalidateAdapter();
+    }
+    return removed;
+  }
+
+  public void clearFilters() {
+    if (filters == null) {
       return;
     }
-    filterDelegate = filter;
+    if (filters.isEmpty()) {
+      return;
+    }
+    filters.clear();
     invalidateAdapter();
   }
 
-  public void setListener(SelectionListener listener) {
-    if (listener == listenerDelegate) {
+  public boolean addListener(SelectionListener listener) {
+    if (listeners != null && listeners.contains(listener)) {
+      return false;
+    }
+    if (listeners == null) {
+      listeners = new ArrayList<>();
+    }
+    listeners.add(listener);
+    return true;
+  }
+
+  public boolean removeListener(SelectionListener listener) {
+    if (listeners == null) {
+      return false;
+    }
+    return listeners.remove(listener);
+  }
+
+  public void clearListeners() {
+    if (listeners == null) {
       return;
     }
-    listenerDelegate = listener;
-    invalidateAdapter();
+    listeners.clear();
   }
 
   public void setHighlight(Highlight highlight, LocalDate date) {
@@ -106,6 +150,15 @@ public class DatePickerView extends RecyclerView {
     post(invalidateAdapterRunnable);
   }
 
+  @Override
+  public void onDateClicked(LocalDate date) {
+    if (listeners != null) {
+      for (SelectionListener listener : listeners) {
+        listener.onDateClicked(date);
+      }
+    }
+  }
+
   private final Runnable invalidateAdapterRunnable = new Runnable() {
     @Override public void run() {
       if (!invalidateAdapter) {
@@ -122,7 +175,7 @@ public class DatePickerView extends RecyclerView {
 
       adapter = new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
           options.weekFields(), options.buildHeaderFormatter(), options.buildWeekdayNames(),
-          filter, listener, highlights);
+          filter, DatePickerView.this, highlights);
       setAdapter(adapter);
       highlights.addListener(adapter);
     }
@@ -138,9 +191,11 @@ public class DatePickerView extends RecyclerView {
       final int length = month.lengthOfMonth();
 
       // Pass through to any client filter.
-      if (filterDelegate != null) {
-        for (int i = 0; i < length; i++) {
-          enabledDays[i] = filterDelegate.isEnabled(month.atDay(i + 1));
+      if (filters != null) {
+        for (DateFilter filter : filters) {
+          for (int i = 0; i < length; i++) {
+            enabledDays[i] = enabledDays[i] && filter.isEnabled(month.atDay(i + 1));
+          }
         }
       }
 
@@ -160,12 +215,4 @@ public class DatePickerView extends RecyclerView {
       return Arrays.copyOf(enabledDays, length);
     }
   }
-
-  final SelectionListener listener = new SelectionListener() {
-    @Override public void onDateClicked(LocalDate date) {
-      if (listenerDelegate != null) {
-        listenerDelegate.onDateClicked(date);
-      }
-    }
-  };
 }

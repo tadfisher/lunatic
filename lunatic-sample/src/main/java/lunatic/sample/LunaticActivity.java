@@ -22,9 +22,9 @@ public class LunaticActivity extends AppCompatActivity {
 
     SingleSelectionListener listener = new SingleSelectionListener(datePickerView,
         ContextCompat.getColor(this, R.color.colorAccent));
-    datePickerView.setListener(listener);
+    datePickerView.addListener(listener);
 
-    datePickerView.setFilter(date -> {
+    datePickerView.addFilter(date -> {
       switch (DayOfWeek.from(date)) {
         case SATURDAY:
         case SUNDAY:

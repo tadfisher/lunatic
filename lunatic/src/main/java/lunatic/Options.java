@@ -91,7 +91,6 @@ public abstract class Options {
 
   String[] buildWeekdayNames() {
     String[] names = new String[7];
-    int firstDayOfWeek = weekFields().getFirstDayOfWeek().getValue();
     for (int i = 0; i < 7; i++) {
       // Populate week names based on the locale-specific definition of a week;
       // i.e. {"M", "T", "W", ...} for the ISO8601 locale.
