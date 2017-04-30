@@ -3,7 +3,10 @@ package lunatic;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.RectEvaluator;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.Xfermode;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
@@ -44,6 +47,7 @@ public class SingleSelectionListener implements SelectionListener {
     private final int color;
 
     private final RectEvaluator rectEvaluator = new RectEvaluator();
+    private final Xfermode xfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT);
 
     SingleHighlight(int color) {
       this.color = color;
@@ -53,6 +57,7 @@ public class SingleSelectionListener implements SelectionListener {
     protected Drawable createDrawable() {
       final ShapeDrawable d = new ShapeDrawable(new OvalShape());
       d.getPaint().setColor(color);
+      d.getPaint().setXfermode(xfermode);
       return d;
     }
 

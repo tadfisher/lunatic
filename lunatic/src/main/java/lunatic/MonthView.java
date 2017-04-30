@@ -284,7 +284,7 @@ public class MonthView extends View {
     highlights.add(highlight);
 
     final int rectsFrom = count * 6;
-    final int rectsTo = count * 6 + 6;
+    final int rectsTo = rectsFrom + 6;
 
     int invalidatedFrom = -1;
     int invalidatedTo = -1;
@@ -440,8 +440,18 @@ public class MonthView extends View {
     drawMonth(canvas);
     drawWeekdayLabels(canvas);
     drawDayGrid(canvas);
+
+    int saveCount = -1;
+    if (highlightDrawables != null || removedHighlightDrawables != null) {
+      final int top = bounds.top + monthHeight + weekdayHeight;
+      saveCount = canvas.saveLayer(bounds.left, top, bounds.right, top + dayGrid.height(),
+          null, Canvas.ALL_SAVE_FLAG);
+    }
     drawDayLabels(canvas);
     drawHighlights(canvas);
+    if (saveCount != -1) {
+      canvas.restoreToCount(saveCount);
+    }
   }
 
   protected void drawMonth(Canvas canvas) {
@@ -474,7 +484,6 @@ public class MonthView extends View {
     }
 
     canvas.save();
-    canvas.translate(offsetX, bounds.top + monthHeight + weekdayHeight);
 
     for (int row = 0; row < rowCount; row++) {
       int top = dayGrid.top(row);
@@ -519,7 +528,13 @@ public class MonthView extends View {
     int[] stateSet;
 
     if (isDayEnabled(dayOfMonth)) {
-      stateSet = STATE_ENABLED;
+      if (isDayHighlighted(dayOfMonth)) {
+        stateSet = STATE_ENABLED_ACTIVATED;
+      } else {
+        stateSet = STATE_ENABLED;
+      }
+    } else if (isDayHighlighted(dayOfMonth)) {
+      stateSet = STATE_ACTIVATED;
     } else {
       stateSet = STATE_DISABLED;
     }
@@ -536,7 +551,8 @@ public class MonthView extends View {
   }
 
   private void drawHighlights(Canvas canvas) {
-    if (highlightDrawables == null && removedHighlightDrawables == null) {
+    if ((highlightDrawables == null || highlightDrawables.isEmpty())
+        && (removedHighlightDrawables == null || removedHighlightDrawables.isEmpty())) {
       return;
     }
 
@@ -578,6 +594,20 @@ public class MonthView extends View {
 
   private boolean isDayEnabled(int dayOfMonth) {
     return enabledDays[dayOfMonth - 1];
+  }
+
+  private boolean isDayHighlighted(int dayOfMonth) {
+    if (highlights == null) {
+      return false;
+    }
+
+    for (Highlight highlight : highlights) {
+      if (highlight.interval.contains(month.atDay(dayOfMonth))) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   protected void setPaintTextAppearance(int paintIndex, TextPaint paint, int textAppearanceResId) {
