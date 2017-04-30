@@ -4,10 +4,10 @@ class Grid {
 
   final int rows;
   final int cols;
-  private final int cw;
-  private final int ch;
-  private final int hw;
-  private final int hh;
+  final int cw;
+  final int ch;
+  final int hw;
+  final int hh;
 
   Grid(final int rows, final int cols, final int cellWidth, final int cellHeight) {
     this.rows = rows;
@@ -18,62 +18,47 @@ class Grid {
     hh = cellHeight / 2;
   }
 
-  int width() {
+  public int width() {
     return cw * cols;
   }
 
-  int height() {
+  public int height() {
     return ch * rows;
   }
 
-  int left(int x) {
+  public int left(int x) {
     return x * cw;
   }
 
-  int right(int x) {
+  public int right(int x) {
     return x * cw + cw;
   }
 
-  int top(int y) {
+  public int top(int y) {
     return y * ch;
   }
 
-  int bottom(int y) {
+  public int bottom(int y) {
     return y * ch + ch;
   }
 
-  int centerX(int x) {
+  public int centerX(int x) {
     return x * cw + hw;
   }
 
-  int centerY(int y) {
+  public int centerY(int y) {
     return y * ch + hh;
   }
 
-  int row(int offset) {
-    return offset / cols;
+  public int row(int index) {
+    return index / cols;
   }
 
-  int col(int offset) {
-    return offset % cols;
+  public int col(int index) {
+    return index % cols;
   }
 
-  void rowRect(int row, int indexStart, int indexEnd, BoundedRect boundedRect) {
-    int startY = row(indexStart);
-    int endY = row(indexEnd);
-    if (row < startY || row > endY) {
-      boundedRect.rect.setEmpty();
-      return;
-    }
-
-    int startX = row == startY ? col(indexStart) : 0;
-    int endX = row == endY ? col(indexEnd) : cols - 1;
-    boundedRect.rect.set(left(startX), top(row), right(endX), bottom(row));
-    boundedRect.openStart = row != startY;
-    boundedRect.openEnd = row != endY;
-  }
-
-  int offsetAtPixel(int x, int y) {
+  public int offsetAtPixel(int x, int y) {
     int col = x / cw;
     int row = y / ch;
     if (col < 0 || col >= cols || row < 0 || row >= rows) {

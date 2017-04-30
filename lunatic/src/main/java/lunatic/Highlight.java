@@ -3,7 +3,6 @@ package lunatic;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import org.threeten.bp.LocalDate;
-import java.util.List;
 
 public abstract class Highlight {
 
@@ -37,13 +36,13 @@ public abstract class Highlight {
 
   @NonNull protected abstract Drawable createDrawable();
 
-  protected abstract void onAdd(Drawable drawable, List<BoundedRect> regions);
+  protected abstract void onAdd(Drawable drawable, BoundedGrid grid);
 
-  protected abstract void onShow(Drawable drawable, List<BoundedRect> regions);
+  protected abstract void onShow(Drawable drawable, BoundedGrid grid);
 
-  protected abstract void onChange(Drawable drawable, List<BoundedRect> regions);
+  protected abstract void onChange(Drawable drawable, BoundedGrid grid);
 
-  protected abstract void onRemove(Drawable drawable, List<BoundedRect> regions);
+  protected abstract void onRemove(Drawable drawable, BoundedGrid grid);
 
   void setInterval(LocalDate start, LocalDate end) {
     interval = new Interval(start, end);

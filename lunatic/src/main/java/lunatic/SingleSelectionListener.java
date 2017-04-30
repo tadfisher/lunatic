@@ -13,7 +13,6 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import org.threeten.bp.LocalDate;
-import java.util.List;
 
 /**
  * Selection listener which highlights and returns a single date.
@@ -62,28 +61,28 @@ public class SingleSelectionListener implements SelectionListener {
     }
 
     @Override
-    protected void onAdd(Drawable drawable, List<BoundedRect> regions) {
-      expand(drawable, bounds(regions));
+    protected void onAdd(Drawable drawable, BoundedGrid grid) {
+      expand(drawable, bounds(grid));
     }
 
     @Override
-    protected void onShow(Drawable drawable, List<BoundedRect> regions) {
-      drawable.setBounds(bounds(regions));
+    protected void onShow(Drawable drawable, BoundedGrid grid) {
+      drawable.setBounds(bounds(grid));
       drawable.setAlpha(255);
     }
 
     @Override
-    protected void onChange(Drawable drawable, List<BoundedRect> regions) {
+    protected void onChange(Drawable drawable, BoundedGrid grid) {
       // TODO support change animation?
     }
 
     @Override
-    protected void onRemove(Drawable drawable, List<BoundedRect> regions) {
-      contract(drawable, bounds(regions));
+    protected void onRemove(Drawable drawable, BoundedGrid grid) {
+      contract(drawable, bounds(grid));
     }
 
-    private Rect bounds(List<BoundedRect> regions) {
-      final Rect bounds = new Rect(regions.get(0).rect);
+    private Rect bounds(BoundedGrid grid) {
+      final Rect bounds = grid.rect(grid.startIndex());
       if (bounds.width() > bounds.height()) {
         bounds.inset((bounds.width() - bounds.height()) >> 1, 0);
       } else if (bounds.height() > bounds.width()) {
