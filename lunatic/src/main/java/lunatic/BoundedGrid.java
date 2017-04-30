@@ -1,6 +1,7 @@
 package lunatic;
 
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 
 public class BoundedGrid extends Grid {
 
@@ -60,9 +61,15 @@ public class BoundedGrid extends Grid {
   }
 
   public Rect rect(int index) {
+    Rect rect = new Rect();
+    rect(index, rect);
+    return rect;
+  }
+
+  public void rect(int index, @NonNull Rect rect) {
     final int col = col(index);
     final int row = row(index);
-    return new Rect(left(col), top(row), right(col), bottom(row));
+    rect.set(left(col), top(row), right(col), bottom(row));
   }
 
   // Private setters

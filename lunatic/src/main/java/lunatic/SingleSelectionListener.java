@@ -45,8 +45,18 @@ public class SingleSelectionListener implements SelectionListener {
 
     private final int color;
 
-    private final RectEvaluator rectEvaluator = new RectEvaluator();
+    private final Rect bounds = new Rect();
     private final Xfermode xfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT);
+    private final RectEvaluator rectEvaluator = new RectEvaluator();
+
+    private AnimatorSet inAnimator;
+    private ObjectAnimator inAlpha;
+    private ObjectAnimator inScale;
+
+    private AnimatorSet outAnimator;
+    private ObjectAnimator outAlpha;
+    private ObjectAnimator outScale;
+
 
     SingleHighlight(int color) {
       this.color = color;
@@ -62,12 +72,32 @@ public class SingleSelectionListener implements SelectionListener {
 
     @Override
     protected void onAdd(Drawable drawable, BoundedGrid grid) {
-      expand(drawable, bounds(grid));
+      grid.rect(grid.startIndex(), bounds);
+
+      if (inAnimator == null) {
+        inAlpha = new ObjectAnimator();
+        inAlpha.setPropertyName("alpha");
+        inAlpha.setIntValues(0, 255);
+
+        inScale = new ObjectAnimator();
+        inScale.setPropertyName("bounds");
+
+        inAnimator = new AnimatorSet();
+        inAnimator.setDuration(225);
+        inAnimator.setInterpolator(Utils.linearOutSlowInInterpolator());
+      }
+
+      inAlpha.setTarget(drawable);
+      inScale.setTarget(drawable);
+      inScale.setObjectValues(Utils.centerRect(bounds), Utils.squareRect(bounds));
+      inScale.setEvaluator(rectEvaluator);
+      inAnimator.playTogether(inAlpha, inScale);
+      inAnimator.start();
     }
 
     @Override
     protected void onShow(Drawable drawable, BoundedGrid grid) {
-      drawable.setBounds(bounds(grid));
+      drawable.setBounds(Utils.squareRect(grid.rect(grid.startIndex())));
       drawable.setAlpha(255);
     }
 
@@ -78,43 +108,27 @@ public class SingleSelectionListener implements SelectionListener {
 
     @Override
     protected void onRemove(Drawable drawable, BoundedGrid grid) {
-      contract(drawable, bounds(grid));
-    }
+      grid.rect(grid.startIndex(), bounds);
 
-    private Rect bounds(BoundedGrid grid) {
-      final Rect bounds = grid.rect(grid.startIndex());
-      if (bounds.width() > bounds.height()) {
-        bounds.inset((bounds.width() - bounds.height()) >> 1, 0);
-      } else if (bounds.height() > bounds.width()) {
-        bounds.inset(0, (bounds.height() - bounds.width()) >> 1);
+      if (outAnimator == null) {
+        outAlpha = new ObjectAnimator();
+        outAlpha.setPropertyName("alpha");
+        outAlpha.setIntValues(255, 0);
+
+        outScale = new ObjectAnimator();
+        outScale.setPropertyName("bounds");
+
+        outAnimator = new AnimatorSet();
+        outAnimator.setDuration(225);
+        outAnimator.setInterpolator(Utils.fastOutLinearInInterpolator());
       }
-      return bounds;
-    }
 
-    private Rect zero(Rect bounds) {
-      final int cx = bounds.centerX();
-      final int cy = bounds.centerY();
-      return new Rect(cx, cy, cx, cy);
-    }
-
-    private void expand(Drawable drawable, Rect bounds) {
-      final AnimatorSet set = new AnimatorSet();
-      set.playTogether(ObjectAnimator.ofInt(drawable, "alpha", 0, 255),
-          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, zero(bounds), bounds));
-      set.setInterpolator(Utils.linearOutSlowInInterpolator());
-      set.setDuration(225);
-      set.start();
-    }
-
-    private void contract(Drawable drawable, Rect bounds) {
-      final int cx = bounds.centerX();
-      final int cy = bounds.centerY();
-      final AnimatorSet set = new AnimatorSet();
-      set.playTogether(ObjectAnimator.ofInt(drawable, "alpha", 255, 0),
-          ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator, bounds, zero(bounds)));
-      set.setInterpolator(Utils.fastOutLinearInInterpolator());
-      set.setDuration(195);
-      set.start();
+      outAlpha.setTarget(drawable);
+      outScale.setTarget(drawable);
+      outScale.setObjectValues(Utils.squareRect(bounds), Utils.centerRect(bounds));
+      outScale.setEvaluator(rectEvaluator);
+      outAnimator.playTogether(outAlpha, outScale);
+      outAnimator.start();
     }
   }
 }

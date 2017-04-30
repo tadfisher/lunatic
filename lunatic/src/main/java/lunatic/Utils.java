@@ -1,5 +1,6 @@
 package lunatic;
 
+import android.graphics.Rect;
 import android.os.Build;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
@@ -26,6 +27,22 @@ class Utils {
   static int startOfWeekOffset(WeekFields weekDef, DayOfWeek dow) {
     // offset of first day corresponding to the day of week in first 7 days (zero origin)
     return Jdk8Methods.floorMod(dow.getValue() - weekDef.getFirstDayOfWeek().getValue(), 7);
+  }
+
+  static Rect squareRect(Rect rect) {
+    Rect squared = new Rect(rect);
+    if (squared.width() > squared.height()) {
+      squared.inset((squared.width() - squared.height()) >> 1, 0);
+    } else if (squared.height() > squared.width()) {
+      squared.inset(0, (squared.height() - squared.width()) >> 1);
+    }
+    return squared;
+  }
+
+  static Rect centerRect(Rect rect) {
+    final int cx = rect.centerX();
+    final int cy = rect.centerY();
+    return new Rect(cx, cy, cx, cy);
   }
 
   static Interpolator fastOutLinearInInterpolator() {
