@@ -27,7 +27,7 @@ class SparseIntervalTree<T> {
     void onRemoved(T value, long start, long end);
   }
 
-  public static <T> SparseIntervalTree<T> create(Class<T> valueClass) {
+  static <T> SparseIntervalTree<T> create(Class<T> valueClass) {
     return new SparseIntervalTree<>(valueClass, null, 0, 0);
   }
 
@@ -47,9 +47,9 @@ class SparseIntervalTree<T> {
     if (source != null) {
       T[] sourceValues = source.find(start, end);
 
-      for (int i = 0; i < sourceValues.length; i++) {
-        long st = source.getStart(sourceValues[i]) - start;
-        long en = source.getEnd(sourceValues[i]) - start;
+      for (T sourceValue : sourceValues) {
+        long st = source.getStart(sourceValue) - start;
+        long en = source.getEnd(sourceValue) - start;
 
         if (st < 0) {
           st = 0;
@@ -65,21 +65,21 @@ class SparseIntervalTree<T> {
           en = end - start;
         }
 
-        set(false, sourceValues[i], st, en);
+        set(false, sourceValue, st, en);
       }
       restoreInvariants();
     }
   }
 
-  public int size() {
+  int size() {
     return valueCount;
   }
 
-  public void set(T what, long start, long end) {
+  void set(T what, long start, long end) {
     set(true, what, start, end);
   }
 
-  public void remove(T what) {
+  void remove(T what) {
     if (indexOfValue == null) {
       return;
     }
@@ -90,7 +90,7 @@ class SparseIntervalTree<T> {
     }
   }
 
-  public void clear() {
+  void clear() {
     for (int i = valueCount - 1; i >= 0; i--) {
       T what = values[i];
       long start = starts[i];
@@ -106,7 +106,7 @@ class SparseIntervalTree<T> {
     }
   }
 
-  public T[] find(long queryStart, long queryEnd) {
+  T[] find(long queryStart, long queryEnd) {
     if (valueCount == 0) {
       //noinspection unchecked
       return (T[]) Array.newInstance(valueClass, 0);
@@ -123,7 +123,7 @@ class SparseIntervalTree<T> {
     return ret;
   }
 
-  public long getStart(T what) {
+  private long getStart(T what) {
     if (indexOfValue == null) {
       return -1;
     }
@@ -131,7 +131,7 @@ class SparseIntervalTree<T> {
     return i == null ? -1 : starts[i];
   }
 
-  public long getEnd(T what) {
+  private long getEnd(T what) {
     if (indexOfValue == null) {
       return -1;
     }
@@ -139,15 +139,15 @@ class SparseIntervalTree<T> {
     return i == null ? -1 : ends[i];
   }
 
-  public SparseIntervalTree<T> slice(long start, long end) {
+  SparseIntervalTree<T> slice(long start, long end) {
     return new SparseIntervalTree<>(valueClass, this, start, end);
   }
 
-  public void addListener(Listener<T> listener) {
+  void addListener(Listener<T> listener) {
     listeners.add(listener);
   }
 
-  public void removeListener(Listener<T> listener) {
+  void removeListener(Listener<T> listener) {
     listeners.remove(listener);
   }
 
