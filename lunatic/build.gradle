@@ -23,9 +23,11 @@ android {
 }
 
 dependencies {
-  provided deps.supportRecyclerView
-  provided deps.threeten
+  compileOnly deps.supportRecyclerView
+  compileOnly deps.threeten
   annotationProcessor deps.autoValue
-  provided deps.autoValueAnnotations
-  testCompile deps.junit
+  compileOnly deps.autoValueAnnotations
+  testImplementation deps.junit
+  androidJacocoAgent deps.jacocoAgent
+  androidJacocoAnt deps.jacocoAnt
 }

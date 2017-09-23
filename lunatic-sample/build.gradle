@@ -19,9 +19,10 @@ android {
 }
 
 dependencies {
-  compile project(':lunatic')
-
-  compile deps.appcompat
-  compile deps.supportDesign
-  compile deps.threetenAndroid
+  implementation project(':lunatic')
+  implementation deps.appcompat
+  implementation deps.supportDesign
+  implementation deps.threetenAndroid
+  androidJacocoAgent deps.jacocoAgent
+  androidJacocoAnt deps.jacocoAnt
 }
