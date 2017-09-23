@@ -66,7 +66,9 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
       filters = new ArrayList<>();
     }
     filters.add(filter);
-    invalidateAdapter();
+    if (adapter != null) {
+      adapter.notifyDataSetChanged();
+    }
     return true;
   }
 
@@ -75,8 +77,8 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
       return false;
     }
     boolean removed = filters.remove(filter);
-    if (removed) {
-      invalidateAdapter();
+    if (removed && adapter != null) {
+      adapter.notifyDataSetChanged();
     }
     return removed;
   }
@@ -89,7 +91,9 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
       return;
     }
     filters.clear();
-    invalidateAdapter();
+    if (adapter != null) {
+      adapter.notifyDataSetChanged();
+    }
   }
 
   public boolean addListener(SelectionListener listener) {
@@ -159,26 +163,24 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
     }
   }
 
-  private final Runnable invalidateAdapterRunnable = new Runnable() {
-    @Override public void run() {
-      if (!invalidateAdapter) {
-        return;
-      }
-      if (interval == null || options == null) {
-        return;
-      }
-      invalidateAdapter = false;
-
-      if (adapter != null) {
-        highlights.removeListener(adapter);
-      }
-
-      adapter = new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
-          options.weekFields(), options.buildHeaderFormatter(), options.buildWeekdayNames(),
-          filter, DatePickerView.this, highlights);
-      setAdapter(adapter);
-      highlights.addListener(adapter);
+  private final Runnable invalidateAdapterRunnable = () -> {
+    if (!invalidateAdapter) {
+      return;
     }
+    if (interval == null || options == null) {
+      return;
+    }
+    invalidateAdapter = false;
+
+    if (adapter != null) {
+      highlights.removeListener(adapter);
+    }
+
+    adapter = new MonthAdapter(getContext(), monthViewResId, interval, options.now(),
+        options.weekFields(), options.buildHeaderFormatter(), options.buildWeekdayNames(),
+        filter, DatePickerView.this, highlights);
+    setAdapter(adapter);
+    highlights.addListener(adapter);
   };
 
   class DateFilterInternal {

@@ -79,9 +79,7 @@ public abstract class Options {
   /**
    * Create a new builder with values set from this options instance.
    */
-  public Builder newBuilder() {
-    return new AutoValue_Options.Builder(this);
-  }
+  abstract Builder toBuilder();
 
   DateTimeFormatter buildHeaderFormatter() {
     return new DateTimeFormatterBuilder()

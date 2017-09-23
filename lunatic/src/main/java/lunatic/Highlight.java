@@ -36,7 +36,9 @@ public abstract class Highlight {
 
   @NonNull protected abstract Drawable createDrawable();
 
-  protected abstract void onAdd(Drawable drawable, BoundedGrid grid);
+  protected void onAdd(Drawable drawable, BoundedGrid grid) {
+    onShow(drawable, grid);
+  }
 
   protected abstract void onShow(Drawable drawable, BoundedGrid grid);
 

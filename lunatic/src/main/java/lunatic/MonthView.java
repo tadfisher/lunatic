@@ -1,10 +1,5 @@
 package lunatic;
 
-import static android.view.MotionEvent.ACTION_CANCEL;
-import static android.view.MotionEvent.ACTION_DOWN;
-import static android.view.MotionEvent.ACTION_MOVE;
-import static android.view.MotionEvent.ACTION_UP;
-
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
@@ -15,16 +10,23 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import codes.tad.lunatic.R;
+import java.util.ArrayList;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
-import java.util.ArrayList;
-import codes.tad.lunatic.R;
+
+import static android.view.MotionEvent.ACTION_CANCEL;
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
 
 public class MonthView extends View {
 
@@ -593,11 +595,7 @@ public class MonthView extends View {
     int styleIndex = 0;
     ColorStateList textColor = null;
     boolean allCaps = false;
-    String fontFamily = null;
-    boolean elegant = false;
-    float letterSpacing = 0;
-    String fontFeatureSettings = null;
-
+    TypedValue fontFamily = new TypedValue();
     for (int i = 0; i < a.getIndexCount(); i++) {
       int attr = a.getIndex(i);
       if (attr == R.styleable.lunatic_TextAppearance_android_textSize) {
@@ -611,15 +609,7 @@ public class MonthView extends View {
       } else if (attr == R.styleable.lunatic_TextAppearance_android_textAllCaps) {
         allCaps = a.getBoolean(attr, allCaps);
       } else if (attr == R.styleable.lunatic_TextAppearance_android_fontFamily) {
-        fontFamily = a.getString(attr);
-      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        if (attr == R.styleable.lunatic_TextAppearance_android_elegantTextHeight) {
-          elegant = a.getBoolean(attr, elegant);
-        } else if (attr == R.styleable.lunatic_TextAppearance_android_letterSpacing) {
-          letterSpacing = a.getFloat(attr, letterSpacing);
-        } else if (attr == R.styleable.lunatic_TextAppearance_android_fontFeatureSettings) {
-          fontFeatureSettings = a.getString(attr);
-        }
+        a.getValue(attr, fontFamily);
       }
     }
 
@@ -635,28 +625,55 @@ public class MonthView extends View {
     }
     textAllCaps[paintIndex] = allCaps;
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      paint.setElegantTextHeight(elegant);
-      paint.setLetterSpacing(letterSpacing);
-      paint.setFontFeatureSettings(fontFeatureSettings);
-    }
-
     setPaintTypefaceFromAttrs(paint, fontFamily, typefaceIndex, styleIndex);
 
     paint.setTextAlign(Paint.Align.CENTER);
     textOffsetY[paintIndex] = -(paint.ascent() + paint.descent()) / 2f;
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      boolean elegant = false;
+      float letterSpacing = 0;
+      String fontFeatureSettings = null;
+
+      a = getContext().getTheme().obtainStyledAttributes(textAppearanceResId,
+          R.styleable.lunatic_TextAppearance21);
+      for (int i = 0; i < a.getIndexCount(); i++) {
+        int attr = a.getIndex(i);
+        if (attr == R.styleable.lunatic_TextAppearance21_android_elegantTextHeight) {
+          elegant = a.getBoolean(attr, elegant);
+        } else if (attr == R.styleable.lunatic_TextAppearance21_android_letterSpacing) {
+          letterSpacing = a.getFloat(attr, letterSpacing);
+        } else if (attr == R.styleable.lunatic_TextAppearance21_android_fontFeatureSettings) {
+          fontFeatureSettings = a.getString(attr);
+        }
+      }
+      a.recycle();
+
+      paint.setElegantTextHeight(elegant);
+      paint.setLetterSpacing(letterSpacing);
+      paint.setFontFeatureSettings(fontFeatureSettings);
+    }
   }
 
-  private void setPaintTypefaceFromAttrs(Paint paint, String familyName, int typefaceIndex,
+  private void setPaintTypefaceFromAttrs(Paint paint, TypedValue family, int typefaceIndex,
       int styleIndex) {
     Typeface tf = null;
-    if (familyName != null) {
-      tf = Typeface.create(familyName, styleIndex);
-      if (tf != null) {
-        setPaintTypeface(paint, tf);
-        return;
-      }
+
+    switch (family.type) {
+      case TypedValue.TYPE_STRING:
+        tf = Typeface.create(family.string.toString(), styleIndex);
+        break;
+      case TypedValue.TYPE_REFERENCE:
+        // AppCompat font resource
+        tf = ResourcesCompat.getFont(getContext(), family.resourceId);
+        break;
     }
+
+    if (tf != null) {
+      setPaintTypeface(paint, tf, styleIndex);
+      return;
+    }
+
     switch (typefaceIndex) {
       case SANS:
         tf = Typeface.SANS_SERIF;
@@ -664,7 +681,6 @@ public class MonthView extends View {
       case SERIF:
         tf = Typeface.SERIF;
         break;
-
       case MONOSPACE:
         tf = Typeface.MONOSPACE;
         break;

@@ -51,7 +51,7 @@ public class BoundedGrid extends Grid {
 
   public int rangeRight() {
     if (row(endIndex) > row(startIndex)) {
-      return right(cols);
+      return width();
     }
     return right(endIndex);
   }
