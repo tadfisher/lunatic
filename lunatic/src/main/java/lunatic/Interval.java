@@ -1,15 +1,17 @@
 package lunatic;
 
-import static org.threeten.bp.format.DateTimeFormatter.ISO_LOCAL_DATE;
-
+import android.os.Parcel;
+import android.os.Parcelable;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.temporal.ChronoUnit;
 
+import static org.threeten.bp.format.DateTimeFormatter.ISO_LOCAL_DATE;
+
 /**
  * Interval between two abstract dates.
  */
-class Interval {
+class Interval implements Parcelable {
   final LocalDate start;
   final LocalDate end;
   final YearMonth startMonth;
@@ -54,4 +56,23 @@ class Interval {
   public String toString() {
     return "(" + start.format(ISO_LOCAL_DATE) + ", " + end.format(ISO_LOCAL_DATE) + ")";
   }
+
+  @Override public int describeContents() {
+    return 0;
+  }
+
+  @Override public void writeToParcel(Parcel out, int flags) {
+    out.writeLong(start.toEpochDay());
+    out.writeLong(end.toEpochDay());
+  }
+
+  public static final Creator<Interval> CREATOR = new Creator<Interval>() {
+    @Override public Interval createFromParcel(Parcel in) {
+      return new Interval(LocalDate.ofEpochDay(in.readLong()), LocalDate.ofEpochDay(in.readLong()));
+    }
+
+    @Override public Interval[] newArray(int size) {
+      return new Interval[size];
+    }
+  };
 }

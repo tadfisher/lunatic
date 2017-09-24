@@ -1,22 +1,22 @@
 package lunatic;
 
-import static android.support.v7.widget.RecyclerView.NO_POSITION;
-import static lunatic.Highlight.Op.ADD;
-import static lunatic.Highlight.Op.REMOVE;
-import static org.threeten.bp.temporal.ChronoUnit.MONTHS;
-
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import java.util.List;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.WeekFields;
-import java.util.List;
+
+import static android.support.v7.widget.RecyclerView.NO_POSITION;
+import static lunatic.Selection.Op.ADD;
+import static lunatic.Selection.Op.REMOVE;
+import static org.threeten.bp.temporal.ChronoUnit.MONTHS;
 
 class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
-    implements SparseIntervalTree.Listener<Highlight> {
+    implements SparseIntervalTree.Listener<Selection> {
   private final int monthViewResId;
   private final String monthViewLayoutName;
 
@@ -27,12 +27,12 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
   private final String[] weekdayNames;
   private final DatePickerView.DateFilterInternal filter;
   private final SelectionListener listener;
-  private final SparseIntervalTree<Highlight> highlights;
+  private final SparseIntervalTree<Selection> selections;
 
   MonthAdapter(Context context, int monthViewResId, Interval interval, LocalDate now,
       WeekFields weekFields, DateTimeFormatter headerFormatter, String[] weekdayNames,
       DatePickerView.DateFilterInternal filter, SelectionListener listener,
-      SparseIntervalTree<Highlight> highlights) {
+      SelectionTree selections) {
 
     this.monthViewResId = monthViewResId;
     this.interval = interval;
@@ -42,7 +42,7 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
     this.weekdayNames = weekdayNames;
     this.filter = filter;
     this.listener = listener;
-    this.highlights = highlights;
+    this.selections = selections;
 
     monthViewLayoutName = context.getResources().getResourceName(this.monthViewResId);
 
@@ -65,9 +65,9 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
 
   @Override public void onBindViewHolder(MonthViewHolder holder, int position) {
     final YearMonth yearMonth = getMonth(position);
-    Highlight[] h =
-        highlights.find(yearMonth.atDay(1).toEpochDay(), yearMonth.atEndOfMonth().toEpochDay());
-    holder.bindMonth(yearMonth, now, filter.getEnabledDates(yearMonth), h);
+    Selection[] sel =
+        selections.find(yearMonth.atDay(1).toEpochDay(), yearMonth.atEndOfMonth().toEpochDay());
+    holder.bindMonth(yearMonth, now, filter.getEnabledDates(yearMonth), sel);
   }
 
   @Override
@@ -78,8 +78,8 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
     }
 
     //noinspection unchecked
-    List<HighlightOp> ops = (List<HighlightOp>)(List<?>) payloads;
-    for (HighlightOp op : ops) {
+    List<SelectionOp> ops = (List<SelectionOp>)(List<?>) payloads;
+    for (SelectionOp op : ops) {
       holder.bindHighlight(op);
     }
   }
@@ -109,40 +109,40 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
   }
 
   @Override
-  public void onAdded(Highlight value, long start, long end) {
-    notifyHighlight(new HighlightOp(value, ADD),
-        value.interval.startMonth, value.interval.endMonth);
+  public void onAdded(Selection selection, long start, long end) {
+    notifySelection(new SelectionOp(selection, ADD),
+        selection.interval.startMonth, selection.interval.endMonth);
   }
 
   @Override
-  public void onChanged(Highlight value, long oldStart, long oldEnd, long newStart, long newEnd) {
+  public void onChanged(Selection selection, long oldStart, long oldEnd, long newStart,
+      long newEnd) {
     // TODO support CHANGE op
-    notifyHighlight(new HighlightOp(value, REMOVE),
+    notifySelection(new SelectionOp(selection, REMOVE),
         YearMonth.from(LocalDate.ofEpochDay(oldStart)),
         YearMonth.from(LocalDate.ofEpochDay(oldEnd)));
-    notifyHighlight(new HighlightOp(value, ADD),
-        value.interval.startMonth, value.interval.endMonth);
+    notifySelection(new SelectionOp(selection, ADD),
+        selection.interval.startMonth, selection.interval.endMonth);
   }
 
   @Override
-  public void onRemoved(Highlight value, long start, long end) {
-    notifyHighlight(new HighlightOp(value, REMOVE),
+  public void onRemoved(Selection value, long start, long end) {
+    notifySelection(new SelectionOp(value, REMOVE),
         value.interval.startMonth, value.interval.endMonth);
   }
 
-  private void notifyHighlight(HighlightOp op, YearMonth startMonth, YearMonth endMonth) {
+  private void notifySelection(SelectionOp op, YearMonth startMonth, YearMonth endMonth) {
     int startPosition = getPosition(startMonth);
     int length = (int) MONTHS.between(startMonth, endMonth) + 1;
     notifyItemRangeChanged(startPosition, length, op);
   }
 
-  static class HighlightOp {
+  static class SelectionOp {
+    final Selection selection;
+    final Selection.Op op;
 
-    final Highlight highlight;
-    final Highlight.Op op;
-
-    HighlightOp(Highlight highlight, Highlight.Op op) {
-      this.highlight = highlight;
+    SelectionOp(Selection selection, Selection.Op op) {
+      this.selection = selection;
       this.op = op;
     }
   }
@@ -155,18 +155,21 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
       this.monthView = monthView;
     }
 
-    void bindMonth(final YearMonth month, final LocalDate now, final boolean[] enabledDays, final
-     Highlight[] highlights) {
-      monthView.bind(month, now, enabledDays, highlights);
+    void bindMonth(final YearMonth month, final LocalDate now, final boolean[] enabledDays,
+        final Selection[] selections) {
+      monthView.bind(month, now, enabledDays);
+      for (Selection s : selections) {
+        monthView.addSelection(s, false);
+      }
     }
 
-    void bindHighlight(HighlightOp op) {
+    void bindHighlight(SelectionOp op) {
       switch (op.op) {
         case ADD:
-          monthView.addHighlight(op.highlight);
+          monthView.addSelection(op.selection);
           break;
         case REMOVE:
-          monthView.removeHighlight(op.highlight);
+          monthView.removeSelection(op.selection);
           break;
       }
     }

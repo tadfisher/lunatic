@@ -1,9 +1,9 @@
 package lunatic;
 
-import static org.junit.Assert.assertArrayEquals;
-
 import org.junit.Test;
-import lunatic.SparseIntervalTree;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class SparseIntervalTreeTest {
 
@@ -61,5 +61,27 @@ public class SparseIntervalTreeTest {
 
     values = tree.find(6, 6);
     assertArrayEquals(new String[]{"first", "second"}, values);
+  }
+
+  @Test
+  public void restore() {
+    SparseIntervalTree<String> tree = SparseIntervalTree.create(String.class);
+    String first = "first";
+    String second = "second";
+    String third = "third";
+    String fourth = "fourth";
+    tree.set(first, 1, 1);
+    tree.set(second, 2, 2);
+    tree.set(third, 2, 4);
+    tree.set(fourth, 4, 4);
+    tree.remove(third);
+
+    SparseIntervalTree<String> copy = new SparseIntervalTree<>(String.class, tree.valueCount,
+        tree.values, tree.starts, tree.ends);
+    assertEquals(tree.valueCount, copy.valueCount);
+    assertArrayEquals(tree.values, copy.values);
+    assertArrayEquals(tree.starts, copy.starts);
+    assertArrayEquals(tree.ends, copy.ends);
+    assertArrayEquals(new String[] { first, second, fourth }, tree.find(0, 4));
   }
 }

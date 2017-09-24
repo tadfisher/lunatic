@@ -23,6 +23,7 @@ public class LunaticActivity extends AppCompatActivity {
     datePickerView.setOptions(options);
 
     SelectionListener listener = new SingleSelectionListener(datePickerView,
+        "primary",
         new CircleHighlight(ContextCompat.getColor(this, R.color.colorAccent)));
     datePickerView.addListener(listener);
 

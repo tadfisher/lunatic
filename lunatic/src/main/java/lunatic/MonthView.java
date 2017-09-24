@@ -116,7 +116,7 @@ public class MonthView extends View {
 
   private boolean[] enabledDays;
 
-  private ArrayList<Highlight> highlights;
+  private ArrayList<Selection> selections;
 
   private ArrayList<BoundedGrid> highlightedGrids;
 
@@ -221,8 +221,7 @@ public class MonthView extends View {
     this.listener = listener;
   }
 
-  void bind(final YearMonth month, final LocalDate now, final boolean[] enabledDays,
-      final Highlight[] highlights) {
+  void bind(final YearMonth month, final LocalDate now, final boolean[] enabledDays) {
     this.month = month;
 
     cellCount = enabledDays.length;
@@ -239,11 +238,7 @@ public class MonthView extends View {
         ? now.getDayOfMonth()
         : -1;
 
-    clearHighlights();
-    for (Highlight h : highlights) {
-      addHighlight(h, false);
-    }
-
+    clearSelections();
     requestLayout();
     invalidate();
   }
@@ -267,22 +262,22 @@ public class MonthView extends View {
     invalidate();
   }
 
-  void addHighlight(Highlight highlight) {
-    addHighlight(highlight, true);
+  void addSelection(Selection selection) {
+    addSelection(selection, true);
   }
 
-  private void addHighlight(Highlight highlight, boolean animate) {
-    final boolean openStart = highlight.interval.startMonth.isBefore(month);
-    final boolean openEnd = highlight.interval.endMonth.isAfter(month);
+  void addSelection(Selection selection, boolean animate) {
+    final boolean openStart = selection.interval.startMonth.isBefore(month);
+    final boolean openEnd = selection.interval.endMonth.isAfter(month);
 
-    final int start = openStart ? 1 : highlight.interval.start.getDayOfMonth();
-    final int end = openEnd ? cellCount : highlight.interval.end.getDayOfMonth();
+    final int start = openStart ? 1 : selection.interval.start.getDayOfMonth();
+    final int end = openEnd ? cellCount : selection.interval.end.getDayOfMonth();
 
-    if (highlights == null) {
-      highlights = new ArrayList<>(1);
+    if (selections == null) {
+      selections = new ArrayList<>(1);
     }
-    final int index = highlights.size();
-    highlights.add(highlight);
+    final int index = selections.size();
+    selections.add(selection);
 
     if (highlightedGrids == null) {
       highlightedGrids = new ArrayList<>();
@@ -305,27 +300,27 @@ public class MonthView extends View {
       highlightDrawables = new ArrayList<>();
     }
 
-    Drawable d = highlight.createDrawable();
+    Drawable d = selection.highlight.createDrawable();
     d.setCallback(this);
     highlightDrawables.add(d);
 
     if (animate) {
-      highlight.onAdd(d, grid);
+      selection.highlight.onAdd(d, grid);
     } else {
-      highlight.onShow(d, grid);
+      selection.highlight.onShow(d, grid);
     }
   }
 
-  void removeHighlight(Highlight highlight) {
-    if (highlights == null) {
+  void removeSelection(Selection selection) {
+    if (selections == null) {
       return;
     }
 
-    final int index = highlights.indexOf(highlight);
+    final int index = selections.indexOf(selection);
     final Drawable d = highlightDrawables.remove(index);
-    highlight.onRemove(d, highlightedGrids.remove(index));
+    selection.highlight.onRemove(d, highlightedGrids.remove(index));
 
-    highlights.remove(index);
+    selections.remove(index);
 
     if (removedHighlightDrawables == null) {
       removedHighlightDrawables = new ArrayList<>();
@@ -333,9 +328,9 @@ public class MonthView extends View {
     removedHighlightDrawables.add(d);
   }
 
-  private void clearHighlights() {
-    if (highlights != null) {
-      highlights.clear();
+  private void clearSelections() {
+    if (selections != null) {
+      selections.clear();
     }
     if (highlightDrawables != null) {
       highlightDrawables.clear();
@@ -569,12 +564,12 @@ public class MonthView extends View {
   }
 
   private boolean isDayHighlighted(int dayOfMonth) {
-    if (highlights == null) {
+    if (selections == null) {
       return false;
     }
 
-    for (Highlight highlight : highlights) {
-      if (highlight.interval.contains(month.atDay(dayOfMonth))) {
+    for (Selection selection : selections) {
+      if (selection.interval.contains(month.atDay(dayOfMonth))) {
         return true;
       }
     }

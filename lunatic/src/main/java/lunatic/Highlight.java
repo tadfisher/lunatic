@@ -1,14 +1,10 @@
 package lunatic;
 
 import android.graphics.drawable.Drawable;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import org.threeten.bp.LocalDate;
 
-public abstract class Highlight {
-
-  enum Op { ADD, CHANGE, REMOVE, SHOW }
-
-  Interval interval;
+public abstract class Highlight implements Parcelable {
 
   /**
    * Override to set the relative order in which this highlight is drawn. Highlights with higher
@@ -18,20 +14,6 @@ public abstract class Highlight {
    */
   public int priority() {
     return 0;
-  }
-
-  /**
-   * Called when the date picker has assigned a new single date to this highlight.
-   */
-  public void onDateChanged(LocalDate date) {}
-
-  /**
-   * Called when the date picker assigns a new date interval to this highlight.
-   */
-  public void onIntervalChanged(LocalDate start, LocalDate end) {
-    if (start.equals(end)) {
-      onDateChanged(start);
-    }
   }
 
   @NonNull protected abstract Drawable createDrawable();
@@ -46,8 +28,7 @@ public abstract class Highlight {
 
   protected abstract void onRemove(Drawable drawable, BoundedGrid grid);
 
-  void setInterval(LocalDate start, LocalDate end) {
-    interval = new Interval(start, end);
-    onIntervalChanged(start, end);
+  @Override public int describeContents() {
+    return 0;
   }
 }

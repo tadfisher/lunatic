@@ -1,13 +1,13 @@
 package lunatic;
 
 import com.google.auto.value.AutoValue;
+import java.util.Locale;
 import org.threeten.bp.DayOfWeek;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.format.DateTimeFormatterBuilder;
 import org.threeten.bp.format.TextStyle;
 import org.threeten.bp.temporal.WeekFields;
-import java.util.Locale;
 
 /**
  * Options for the DatePickerView.

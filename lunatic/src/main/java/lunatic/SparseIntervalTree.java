@@ -10,20 +10,24 @@ import java.util.List;
  * intervals.
  */
 class SparseIntervalTree<T> {
+
   private Class<? extends T> valueClass;
-  private T[] values;
-  private long[] starts;
-  private long[] ends;
+  T[] values;
+  long[] starts;
+  long[] ends;
   private long[] max;
   private IdentityHashMap<T, Integer> indexOfValue;
   private int lowWaterMark;
-  private int valueCount;
+  int valueCount;
 
   private List<Listener<T>> listeners;
 
   public interface Listener<T> {
+
     void onAdded(T value, long start, long end);
+
     void onChanged(T value, long oldStart, long oldEnd, long newStart, long newEnd);
+
     void onRemoved(T value, long start, long end);
   }
 
@@ -31,14 +35,14 @@ class SparseIntervalTree<T> {
     return new SparseIntervalTree<>(valueClass, null, 0, 0);
   }
 
-  private SparseIntervalTree(Class<? extends T> valueClass, SparseIntervalTree<T> source,
-      long start, long end) {
+  SparseIntervalTree(Class<? extends T> valueClass, SparseIntervalTree<T> source, long start,
+      long end) {
     this.valueClass = valueClass;
 
     //noinspection unchecked
     values = (T[]) Array.newInstance(valueClass, 0);
 
-    final long[] empty = new long[]{};
+    final long[] empty = new long[] {};
     starts = empty;
     ends = empty;
     max = empty;
@@ -69,6 +73,20 @@ class SparseIntervalTree<T> {
       }
       restoreInvariants();
     }
+  }
+
+  SparseIntervalTree(Class<? extends T> valueClass, int valueCount, T[] values, long[] starts,
+      long[] ends) {
+    this.valueClass = valueClass;
+    this.valueCount = valueCount;
+    this.values = values;
+    this.starts = starts;
+    this.ends = ends;
+
+    max = new long[2 * treeRoot() + 1];
+    listeners = new ArrayList<>();
+
+    restoreInvariants();
   }
 
   int size() {
@@ -151,7 +169,7 @@ class SparseIntervalTree<T> {
     listeners.remove(listener);
   }
 
-  private void set(boolean notify, T what, long start, long end) {
+  protected void set(boolean notify, T what, long start, long end) {
     if (indexOfValue != null) {
       Integer index = indexOfValue.get(what);
       if (index != null) {
@@ -225,9 +243,8 @@ class SparseIntervalTree<T> {
       long start = starts[i];
       if (start <= queryEnd) {
         long end = ends[i];
-        if (end >= queryStart
-            && (start == end || queryStart == queryEnd
-                    || (start != queryEnd && end != queryStart))) {
+        if (end >= queryStart && (start == end || queryStart == queryEnd || (start != queryEnd
+            && end != queryStart))) {
           count++;
         }
         if ((i & 1) != 0) {
@@ -263,9 +280,8 @@ class SparseIntervalTree<T> {
     long start = starts[i];
     if (start <= queryEnd) {
       long end = ends[i];
-      if (end >= queryStart
-          && (start == end || queryStart == queryEnd
-                  || (start != queryEnd && end != queryStart))) {
+      if (end >= queryStart && (start == end || queryStart == queryEnd || (start != queryEnd
+          && end != queryStart))) {
         ret[count] = values[i];
         count++;
       }
@@ -385,7 +401,7 @@ class SparseIntervalTree<T> {
         indexOfValue.put(values[i], i);
       }
     }
-    lowWaterMark  = Integer.MAX_VALUE;
+    lowWaterMark = Integer.MAX_VALUE;
   }
 
   private void invalidateIndex(int i) {

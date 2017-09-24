@@ -7,12 +7,14 @@ import org.threeten.bp.LocalDate;
  */
 public class SingleSelectionListener implements SelectionListener {
   private final DatePickerView datePickerView;
+  private final String tag;
   private final Highlight highlight;
 
   private LocalDate selection;
 
-  public SingleSelectionListener(DatePickerView datePickerView, Highlight highlight) {
+  public SingleSelectionListener(DatePickerView datePickerView, String tag, Highlight highlight) {
     this.datePickerView = datePickerView;
+    this.tag = tag;
     this.highlight = highlight;
   }
 
@@ -22,7 +24,7 @@ public class SingleSelectionListener implements SelectionListener {
       return;
     }
     selection = date;
-    datePickerView.setHighlight(highlight, date);
+    datePickerView.select(tag, date, highlight);
   }
 
   public LocalDate getSelection() {

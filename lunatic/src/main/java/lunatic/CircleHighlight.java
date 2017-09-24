@@ -10,6 +10,8 @@ import android.graphics.Xfermode;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 public class CircleHighlight extends Highlight {
@@ -95,4 +97,19 @@ public class CircleHighlight extends Highlight {
     outAnimator.playTogether(outAlpha, outScale);
     outAnimator.start();
   }
+
+  @Override public void writeToParcel(Parcel out, int flags) {
+    out.writeInt(color);
+  }
+
+  public static final Parcelable.Creator<CircleHighlight> CREATOR =
+      new Parcelable.Creator<CircleHighlight>() {
+        @Override public CircleHighlight createFromParcel(Parcel in) {
+          return new CircleHighlight(in.readInt());
+        }
+
+        @Override public CircleHighlight[] newArray(int size) {
+          return new CircleHighlight[size];
+        }
+      };
 }
