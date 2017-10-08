@@ -22,14 +22,6 @@ public class CircleHighlight extends Highlight {
   private final Xfermode xfermode = new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT);
   private final RectEvaluator rectEvaluator = new RectEvaluator();
 
-  private AnimatorSet inAnimator;
-  private ObjectAnimator inAlpha;
-  private ObjectAnimator inScale;
-
-  private AnimatorSet outAnimator;
-  private ObjectAnimator outAlpha;
-  private ObjectAnimator outScale;
-
   public CircleHighlight(int color) {
     this.color = color;
   }
@@ -44,24 +36,12 @@ public class CircleHighlight extends Highlight {
   @Override protected void onAdd(Drawable drawable, BoundedGrid grid) {
     grid.rect(grid.startIndex(), bounds);
 
-    if (inAnimator == null) {
-      inAlpha = new ObjectAnimator();
-      inAlpha.setPropertyName("alpha");
-      inAlpha.setIntValues(0, 255);
-
-      inScale = new ObjectAnimator();
-      inScale.setPropertyName("bounds");
-
-      inAnimator = new AnimatorSet();
-      inAnimator.setDuration(225);
-      inAnimator.setInterpolator(Utils.linearOutSlowInInterpolator());
-    }
-
-    inAlpha.setTarget(drawable);
-    inScale.setTarget(drawable);
-    inScale.setObjectValues(Utils.centerRect(bounds), Utils.squareRect(bounds));
-    inScale.setEvaluator(rectEvaluator);
-    inAnimator.playTogether(inAlpha, inScale);
+    final AnimatorSet inAnimator = new AnimatorSet().setDuration(225);
+    inAnimator.setInterpolator(Utils.linearOutSlowInInterpolator());
+    inAnimator.playTogether(
+        ObjectAnimator.ofInt(drawable, "alpha", 0, 255),
+        ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator,
+            Utils.centerRect(bounds), Utils.squareRect(bounds)));
     inAnimator.start();
   }
 
@@ -77,24 +57,12 @@ public class CircleHighlight extends Highlight {
   @Override protected void onRemove(Drawable drawable, BoundedGrid grid) {
     grid.rect(grid.startIndex(), bounds);
 
-    if (outAnimator == null) {
-      outAlpha = new ObjectAnimator();
-      outAlpha.setPropertyName("alpha");
-      outAlpha.setIntValues(255, 0);
-
-      outScale = new ObjectAnimator();
-      outScale.setPropertyName("bounds");
-
-      outAnimator = new AnimatorSet();
-      outAnimator.setDuration(225);
-      outAnimator.setInterpolator(Utils.fastOutLinearInInterpolator());
-    }
-
-    outAlpha.setTarget(drawable);
-    outScale.setTarget(drawable);
-    outScale.setObjectValues(Utils.squareRect(bounds), Utils.centerRect(bounds));
-    outScale.setEvaluator(rectEvaluator);
-    outAnimator.playTogether(outAlpha, outScale);
+    final AnimatorSet outAnimator = new AnimatorSet().setDuration(225);
+    outAnimator.setInterpolator(Utils.fastOutLinearInInterpolator());
+    outAnimator.playTogether(
+        ObjectAnimator.ofInt(drawable, "alpha", 255, 0),
+        ObjectAnimator.ofObject(drawable, "bounds", rectEvaluator,
+            Utils.squareRect(bounds), Utils.centerRect(bounds)));
     outAnimator.start();
   }
 

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.YearMonth;
 import org.threeten.bp.format.DateTimeFormatter;
@@ -79,8 +81,13 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
 
     //noinspection unchecked
     List<SelectionOp> ops = (List<SelectionOp>)(List<?>) payloads;
-    for (SelectionOp op : ops) {
-      holder.bindHighlight(op);
+    Set<Selection> seen = new LinkedHashSet<>();
+    for (int i = ops.size() - 1; i >= 0; i--) {
+      final SelectionOp op = ops.get(i);
+      if (!seen.contains(op.selection)) {
+        seen.add(op.selection);
+        holder.bindHighlight(op);
+      }
     }
   }
 
@@ -126,9 +133,9 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
   }
 
   @Override
-  public void onRemoved(Selection value, long start, long end) {
-    notifySelection(new SelectionOp(value, REMOVE),
-        value.interval.startMonth, value.interval.endMonth);
+  public void onRemoved(Selection selection, long start, long end) {
+    notifySelection(new SelectionOp(selection, REMOVE),
+        selection.interval.startMonth, selection.interval.endMonth);
   }
 
   private void notifySelection(SelectionOp op, YearMonth startMonth, YearMonth endMonth) {
@@ -144,6 +151,22 @@ class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.MonthViewHolder>
     SelectionOp(Selection selection, Selection.Op op) {
       this.selection = selection;
       this.op = op;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      SelectionOp that = (SelectionOp) o;
+
+      if (!selection.equals(that.selection)) return false;
+      return op == that.op;
+    }
+
+    @Override public int hashCode() {
+      int result = selection.hashCode();
+      result = 31 * result + op.hashCode();
+      return result;
     }
   }
 

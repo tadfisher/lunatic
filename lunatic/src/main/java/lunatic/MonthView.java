@@ -402,6 +402,13 @@ public class MonthView extends View {
         || super.verifyDrawable(who);
   }
 
+  @Override public void unscheduleDrawable(Drawable who) {
+    super.unscheduleDrawable(who);
+    if (removedHighlightDrawables.contains(who)) {
+      removedHighlightDrawables.remove(who);
+    }
+  }
+
   @Override
   protected void onDraw(Canvas canvas) {
     drawMonth(canvas);

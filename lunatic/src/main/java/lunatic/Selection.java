@@ -17,6 +17,24 @@ class Selection implements Parcelable {
     this.highlight = highlight;
   }
 
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    Selection selection = (Selection) o;
+
+    if (!tag.equals(selection.tag)) return false;
+    if (!interval.equals(selection.interval)) return false;
+    return highlight.equals(selection.highlight);
+  }
+
+  @Override public int hashCode() {
+    int result = tag.hashCode();
+    result = 31 * result + interval.hashCode();
+    result = 31 * result + highlight.hashCode();
+    return result;
+  }
+
   @Override public int describeContents() {
     return 0;
   }

@@ -4,7 +4,7 @@ buildscript {
     maven { url 'https://maven.google.com' }
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.0.0-beta6'
+    classpath 'com.android.tools.build:gradle:3.0.0-beta7'
     classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
   }
 }
@@ -20,7 +20,7 @@ ext {
   minSdkVersion = 19
   targetSdkVersion = 26
   compileSdkVersion = 26
-  buildToolsVersion = '26.0.1'
+  buildToolsVersion = '26.0.2'
   supportLibraryVersion = '26.1.0'
   jacocoVersion = '0.7.9'
   sourceCompatibility = 1.8

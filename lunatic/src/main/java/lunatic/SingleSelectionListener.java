@@ -6,11 +6,11 @@ import org.threeten.bp.LocalDate;
  * Selection listener which highlights and returns a single date.
  */
 public class SingleSelectionListener implements SelectionListener {
-  private final DatePickerView datePickerView;
-  private final String tag;
-  private final Highlight highlight;
+  public final DatePickerView datePickerView;
+  public final String tag;
+  public final Highlight highlight;
 
-  private LocalDate selection;
+  protected LocalDate selection;
 
   public SingleSelectionListener(DatePickerView datePickerView, String tag, Highlight highlight) {
     this.datePickerView = datePickerView;
@@ -24,6 +24,7 @@ public class SingleSelectionListener implements SelectionListener {
       return;
     }
     selection = date;
+    datePickerView.clear(tag);
     datePickerView.select(tag, date, highlight);
   }
 

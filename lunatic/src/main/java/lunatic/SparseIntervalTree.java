@@ -179,8 +179,9 @@ class SparseIntervalTree<T> {
         starts[i] = start;
         ends[i] = end;
 
+        restoreInvariants();
+
         if (notify) {
-          restoreInvariants();
           notifyChanged(what, oldStart, oldEnd, start, end);
         }
 
@@ -202,8 +203,9 @@ class SparseIntervalTree<T> {
       max = new long[sizeOfMax];
     }
 
+    restoreInvariants();
+
     if (notify) {
-      restoreInvariants();
       notifyAdded(what, start, end);
     }
   }

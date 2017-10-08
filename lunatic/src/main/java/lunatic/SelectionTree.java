@@ -16,12 +16,10 @@ class SelectionTree extends SparseIntervalTree<Selection> implements Parcelable 
 
   Selection[] findByTag(String tag) {
     Selection[] results = new Selection[] {};
+    int found = 0;
     for (Selection s : values) {
-      if (s == null) {
-        return results;
-      }
-      if (s.tag.equals(tag)) {
-        results = ArrayUtils.append(results, results.length, s);
+      if (s != null && s.tag.equals(tag)) {
+        results = ArrayUtils.append(results, found++, s);
       }
     }
     return results;

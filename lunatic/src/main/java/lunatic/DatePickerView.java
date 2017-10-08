@@ -155,14 +155,7 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
         throw new IllegalArgumentException("no highlight set for tag: " + tag);
       }
     } else {
-      highlights.putParcelable(tag, highlight);
-    }
-
-    final Selection[] old = selections.findByTag(tag);
-    for (Selection s : old) {
-      if (s != null) {
-        selections.remove(s);
-      }
+      setHighlight(tag, highlight);
     }
 
     final Selection selection = new Selection(tag, new Interval(start, end), highlight);
@@ -170,9 +163,10 @@ public class DatePickerView extends RecyclerView implements SelectionListener {
   }
 
   public void clear(String tag) {
-    for (Selection selection : selections.values) {
-      if (selection.tag.equals(tag)) {
-        selections.remove(selection);
+    final Selection[] sel = selections.findByTag(tag);
+    for (Selection s : sel) {
+      if (s != null) {
+        selections.remove(s);
       }
     }
   }
