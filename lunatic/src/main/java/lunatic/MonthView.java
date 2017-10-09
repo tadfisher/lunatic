@@ -312,11 +312,12 @@ public class MonthView extends View {
   }
 
   void removeSelection(Selection selection) {
-    if (selections == null) {
+    if (selections == null || selections.size() == 0) {
       return;
     }
 
     final int index = selections.indexOf(selection);
+    if (index < 0) return;
     final Drawable d = highlightDrawables.remove(index);
     selection.highlight.onRemove(d, highlightedGrids.remove(index));
 

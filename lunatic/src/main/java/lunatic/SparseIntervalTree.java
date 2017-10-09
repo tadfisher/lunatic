@@ -399,7 +399,7 @@ class SparseIntervalTree<T> {
     }
     for (int i = lowWaterMark; i < valueCount; i++) {
       Integer existing = indexOfValue.get(values[i]);
-      if (existing == null || existing != 1) {
+      if (existing == null || existing != i) {
         indexOfValue.put(values[i], i);
       }
     }

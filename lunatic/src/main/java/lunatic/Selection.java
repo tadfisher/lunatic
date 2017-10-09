@@ -35,6 +35,10 @@ class Selection implements Parcelable {
     return result;
   }
 
+  @Override public String toString() {
+    return String.format("%s [%s]", tag, interval);
+  }
+
   @Override public int describeContents() {
     return 0;
   }

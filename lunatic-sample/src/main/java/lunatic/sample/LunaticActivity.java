@@ -36,11 +36,10 @@ public class LunaticActivity extends AppCompatActivity {
           return;
         }
         selection = date;
-        LocalDate d = date;
         datePickerView.clear(tag);
         for (int i = 0; i < 5; i++) {
-          d = d.plusDays(3);
-          datePickerView.select(tag, d, highlight);
+          date = date.plusDays(3);
+          datePickerView.select(tag, date, highlight);
         }
       }
     };
