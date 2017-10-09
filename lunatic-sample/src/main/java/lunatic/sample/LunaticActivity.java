@@ -3,10 +3,12 @@ package lunatic.sample;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.TypedValue;
 import codes.tad.lunatic.sample.R;
 import java.util.Locale;
 import lunatic.CircleHighlight;
 import lunatic.DatePickerView;
+import lunatic.DotHighlight;
 import lunatic.Options;
 import lunatic.SelectionListener;
 import lunatic.SingleSelectionListener;
@@ -28,9 +30,12 @@ public class LunaticActivity extends AppCompatActivity {
         new CircleHighlight(ContextCompat.getColor(this, R.color.colorAccent)));
     datePickerView.addListener(primaryListener);
 
+    final int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6f,
+        getResources().getDisplayMetrics());
+
     SelectionListener secondaryListener = new SingleSelectionListener(datePickerView,
         "secondary",
-        new CircleHighlight(ContextCompat.getColor(this, R.color.colorAccentLight))) {
+        new DotHighlight(ContextCompat.getColor(this, R.color.colorAccentLight), size)) {
       @Override public void onDateClicked(LocalDate date) {
         if (date.equals(getSelection())) {
           return;
